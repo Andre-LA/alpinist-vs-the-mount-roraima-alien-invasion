@@ -1,0 +1,49 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.6
+Creation-Date: 2021-03-07T14:03:21-03:00
+
+====== GDD ======
+Created domingo 07 março 2021
+
+===== Título do jogo =====
+
+"Alpinist VS The Mount Roraima Alien Invasion" (Alpinista VS A invasão alienígina em Monte Roraima)
+
+===== Plataformas =====
+* Desktop
+	* Windows
+	* Linux
+	* Web
+
+===== Ferramentas =====
+[[https://nelua.io/|Nelua]], [[https://github.com/Andre-LA/nene|Nene]] e [[https://github.com/andre-la/rotor-quick|Rotor-quick]]
+(Obs: Nene depende da biblioteca [[https://www.libsdl.org/|SDL2]] e suas bibliotecas de extensão)
+
+===== Distribuição =====
+Exclusivamente digital pela itch.io, como entrada da [[https://itch.io/jam/igdfe-game-jam-2|IGDFE Game Jam 2]].
+
+===== Prazo =====
+14 de Março de 2021 as 17:59 UTC (14:59 no horário de Brasília)
+
+===== Contexto =====
+Uma raça alienígina invadiu a Terra sem que fosse detectada para causar o fim do mundo. Entretanto, um alpinista corajoso percebeu e fará de tudo para impedir a destruição do planeta.
+
+===== Jogabilidade =====
+O jogo contém dois modos de jogabilidade:
+* Escalada
+* Plataforma
+
+No modo //escalada//, o personagem está "anexado" à parede adjacente (provavelmente à direita), de forma que o jogador só poderá movê-lo verticalmente.
+No modo //plataforma//, o jogador se movimentará horizontalmente //(talvez possa pular)//.
+
+Além disso, constantemente o jogador será cercado por inimigos, que para se defender e atacar, deverá usar uma arma de fogo.
+
+Em todos os casos, a jogabilidade é similar ao encontrado no jogo //Contra III//, de SNES, como demonstrado abaixo no intervalo [11:28, 12:58]:
+
+{{./pasted_image.png?href=https%3A%2F%2Fyoutu.be%2F534SWHp5uZI%3Ft%3D692&width=256}}
+
+A série de jogos Metal Slug também pode ser comparada, especialmente ao do Metal Slug X, como demonstrado no vídeo abaixo no intervalo [18:47, 20:23]:
+
+{{./pasted_image001.png?href=https%3A%2F%2Fyoutu.be%2FsfParGc8BJw%3Ft%3D1127&width=320}}
+
+A criação de inimigos será em pontos e trajetos aleatórios a princípio (tendo apenas como predefinido as regiões de posição onde podem ser criados, caso contrário os inimigos podem aparecer de forma inconveniente ao jogador), depois poderá haver uma refatoração para a criação de coreografias específicas, entretanto, é possível que isso não seja implementado devido as limitações de tempo.

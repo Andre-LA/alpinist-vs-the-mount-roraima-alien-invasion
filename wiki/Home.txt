@@ -1,0 +1,14 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.6
+Creation-Date: 2021-03-07T13:51:02-03:00
+
+====== Home ======
+Created domingo 07 março 2021
+
+This is the wiki about the game [[https://github.com/Andre-LA/alpinist-vs-the-mount-roraima-alien-invasion|Alpinist VS The Mount Roraima Alien Invasion.]]
+
+However, this wiki is used mainly for the developers, for this reason, is primarily written in portuguese.
+
+I may translate this after game development process.
+
+[[+pt:GDD|Ler GDD]]
