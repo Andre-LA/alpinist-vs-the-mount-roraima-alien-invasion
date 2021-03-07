@@ -1,0 +1,11 @@
+[submodule "nene"]
+	path = nene
+	url = https://github.com/Andre-LA/nene.git
+	branch = main
+[submodule "rotor-nelua"]
+	path = rotor-nelua
+	url = https://gitlab.com/Andre-LA/rotor-nelua.git
+[submodule "rotor-quick"]
+	path = rotor-quick
+	url = https://github.com/Andre-LA/rotor-quick.git
+	branch = sdl2-refactor
