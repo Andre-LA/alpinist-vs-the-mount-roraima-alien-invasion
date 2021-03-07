@@ -16,17 +16,19 @@ Created domingo 07 março 2021
 	* Web
 
 ===== Ferramentas =====
-[[https://nelua.io/|Nelua]], [[https://github.com/Andre-LA/nene|Nene]] e [[https://github.com/andre-la/rotor-quick|Rotor-quick]]
+Desenvolvimento: [[https://nelua.io/|Nelua]], [[https://github.com/Andre-LA/nene|Nene]] e [[https://github.com/andre-la/rotor-quick|Rotor-quick]]
+Wiki: Zim-wiki
+Pixel arte: asesprite
 (Obs: Nene depende da biblioteca [[https://www.libsdl.org/|SDL2]] e suas bibliotecas de extensão)
 
 ===== Distribuição =====
 Exclusivamente digital pela itch.io, como entrada da [[https://itch.io/jam/igdfe-game-jam-2|IGDFE Game Jam 2]].
 
 ===== Prazo =====
-14 de Março de 2021 as 17:59 UTC (14:59 no horário de Brasília)
+14 (domingo) de Março de 2021 as 17:59 UTC (14:59 no horário de Brasília)
 
 ===== Contexto =====
-Uma raça alienígina invadiu a Terra sem que fosse detectada para causar o fim do mundo. Entretanto, um alpinista corajoso percebeu e fará de tudo para impedir a destruição do planeta.
+Uma raça alienígina invadiu a Terra sem que fosse detectada para causar o fim do mundo. Entretanto, um alpinista percebeu e fará de tudo para impedir a destruição do planeta.
 
 ===== Jogabilidade =====
 O jogo contém dois modos de jogabilidade:
@@ -34,7 +36,7 @@ O jogo contém dois modos de jogabilidade:
 * Plataforma
 
 No modo //escalada//, o personagem está "anexado" à parede adjacente (provavelmente à direita), de forma que o jogador só poderá movê-lo verticalmente.
-No modo //plataforma//, o jogador se movimentará horizontalmente //(talvez possa pular)//.
+No modo //plataforma//, o jogador se movimentará horizontalmente e pular.
 
 Além disso, constantemente o jogador será cercado por inimigos, que para se defender e atacar, deverá usar uma arma de fogo.
 
@@ -47,3 +49,19 @@ A série de jogos Metal Slug também pode ser comparada, especialmente ao do Met
 {{./pasted_image001.png?href=https%3A%2F%2Fyoutu.be%2FsfParGc8BJw%3Ft%3D1127&width=320}}
 
 A criação de inimigos será em pontos e trajetos aleatórios a princípio (tendo apenas como predefinido as regiões de posição onde podem ser criados, caso contrário os inimigos podem aparecer de forma inconveniente ao jogador), depois poderá haver uma refatoração para a criação de coreografias específicas, entretanto, é possível que isso não seja implementado devido as limitações de tempo.
+
+Os inimigos também atiram contra o jogador.
+
+Em ambos os casos, os personagens contém uma quantidade de Pontos de Vida (PV), e levar um tiro causa um decremento de "//X"// no PV do personagem intersectado pelo projétil, cujo este //X// é definido pelo tiro.
+
+A morte é causada quando o PV do personagem chegam a 0.
+
+A morte de um inimigo é um efeito especial, seguido de sua destruição (em jogo).
+A morte do jogador causa sua animação de morte, seguido da tela de "Fim de Jogo".
+
+===== Personagens =====
+
+* Alpinista
+* Aliens 
+	* Disco voador
+	* Chefão

@@ -1,0 +1,30 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.6
+Creation-Date: 2021-03-07T16:13:25-03:00
+
+====== Sistemas ======
+Created domingo 07 março 2021
+
+===== Movimentação =====
+
+==== Alpinista ====
+
+==== Disco Voador ====
+
+==== Chefão ====
+
+===== Vida =====
+
+===== Morte =====
+
+==== Alpinista ====
+
+==== Inimigos ====
+
+===== Tiro =====
+
+===== Mira =====
+
+==== Alpinista ====
+
+==== Inimigos ====
