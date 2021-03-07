@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>Personagens</title>
+	<title>Sistemas</title>
 	<meta name='Generator' content='Zim 0.73.5'>
 	<style type='text/css'>
 		a          { text-decoration: none      }
@@ -51,7 +51,7 @@
 
 <!-- Header -->
 <div class='header'>
-	[ <a href='../GDD.html'>Prev</a> ]
+	[ <a href='./Artes.html'>Prev</a> ]
 
 	[ <span class='insen'>Index</span> ]
 
@@ -68,7 +68,8 @@
 <ul>
 <li><a href="../GDD.html" title="GDD" class="page">GDD</a>
 <ul>
-<li><b>Personagens</b></li>
+<li><a href="./Artes.html" title="Artes" class="page">Artes</a></li>
+<li><b>Sistemas</b></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -80,7 +81,7 @@
 
 <div class='pages'>
 	<div class='heading'>
-	<h1>Personagens <a name='Home:pt:GDD:Personagens'></a></h1>
+	<h1>Sistemas <a name='Home:pt:GDD:Sistemas'></a></h1>
 	</div>
 
 	<div class='content'>
@@ -88,12 +89,137 @@
 Created domingo 07 março 2021
 </p>
 
-<h2>Alpinista (protagonista)</h2>
+<h2>Vida</h2>
 
 <br>
 
-<h2>Inimigos</h2>
+<p>
+<b>Componente</b> que <b>armazena a quantidade de Pontos de Vida</b> (PV) da entidade.<br>
+Esta quantidade pode ser incrementada em <tt>N pontos</tt>, sendo que N pode ser um número negativo, o que causará seu decremento.
+</p>
 
+<p>
+O personagem é considerado "morto" quando os PV são 0.
+</p>
+
+<h2>Morte</h2>
+
+<br>
+
+<h3>Alpinista</h3>
+
+<br>
+
+<p>
+Ocorre a seguinte sequência de eventos:<br>
+<ol type="1" start="1">
+<li>Alpinista não pode mais sofrer dano</li>
+<li>Alpinista inicia uma animação de morte</li>
+<li>Ao término dessa animação, a tela de "Fim de Jogo" é chamada</li>
+</ol>
+</p>
+
+<h3>Inimigos</h3>
+
+<br>
+
+<p>
+Ocorre a seguinte sequência de eventos:<br>
+<ol type="1" start="1">
+<li>Inimigo torna-se imóvel</li>
+<li>Inicia sua animação de morte</li>
+<li>Destrói-se (como entidade de jogo)</li>
+</ol>
+</p>
+
+<h2>Projétil</h2>
+
+<br>
+
+<p>
+Entidade <b>intersectora</b> com <b>velocidade não variável</b>.
+</p>
+
+<p>
+A criação dessa entidade é feita pelo sistema de <tt>Mira</tt>.
+</p>
+
+<p>
+A direção dessa <tt>Velocidade</tt> é definida em sua criação.<br>
+O projétil só interseccionará com entidades que correspondam com a máscara definida em sua criação.
+</p>
+
+<p>
+Ao intersectar, o projétil tentará obter o componente de <tt>Vida</tt> do intersectado, e caso com sucesso, decrementará os PV da <tt>Vida</tt> obtida.
+</p>
+
+<h2>Mira</h2>
+
+<br>
+
+<p>
+O <b>componente</b> que armazena uma posição (vetor bidimensional) alvo, uma booliana que descreve se um Projétil deverá ser criado (<tt>true</tt>) ou não (<tt>false</tt>), e o último instante (em unidade de tempo) em que criou um <tt>Projétil</tt> pela última vez.
+</p>
+
+<p>
+Quando um <tt>Projétil</tt> é criado, a booliana é definida para <tt>false </tt>automaticamente.
+</p>
+
+<p>
+O <b>sistema</b> de mira calculará um vetor unitário que contém como direção corresponde a direção <i>da diferença entre a posição da entidade iterada com a posição alvo</i> (em outras palavras, esse vetor unitário é obtido através da normalização do vetor resultante da diferença entre a posição da entidade iterada que contém o componente de <tt>Mira</tt> com a posição alvo contido neste componente)
+</p>
+
+<h2>Controladores</h2>
+
+<br>
+
+<h3>Alpinista</h3>
+
+<br>
+
+<p>
+O <b>componente</b> <tt>Controlável por Jogador</tt> contém algumas preferências de jogabilidade do jogador, como velocidade (escalar) de movimento nas plataformas, de escalada, intensidade de pulo, frequência de tiro, etc.
+</p>
+
+<p>
+O <b>sistema</b> Controlador do Jogador manipula os componentes do jogador para obter o comportamento desejado, por exemplo, manipulando a posição alvo da <tt>Mira</tt>, assim como sua booliana, para que o respectivo sistema crie o projétil na direção apontada; ou ainda, manipulando a direção e velocidade escalar do componente <tt>Velocidade</tt>.
+</p>
+
+<h3>Inimigos</h3>
+
+<br>
+
+<p>
+Segue o mesmo princípio do controlador e controlável do jogador, entretanto o conceito é aplicado pra inimigos.
+</p>
+
+<p>
+A princípio, o comportamento é adicionar velocidade em direção ao jogador se o inimigo estiver, em relação ao jogador, numa distância maior que um valor especificado na programação, ao chegar perto, o inimigo tentará se afastar (isso é, desacelerará e então acelerará pra se afastar).
+</p>
+
+<p>
+O inimigo sempre define como posição alvo de sua <tt>Mira</tt> a posição do jogador, e atira numa determinada frequência.
+</p>
+
+<h2>Tela de Fim de Jogo</h2>
+
+<br>
+
+<p>
+A tela de fim de jogo é composta por um retângulo (a princípio invisível) que cobre toda a tela e um texto escondido.
+</p>
+
+<p>
+Quando é chamada, o texto se posicionará por interpolação linear e o retângulo transicionará para uma cor preta sólida.
+</p>
+
+<p>
+Essa tela irá sobrepor a tela do jogo, com excessão talvez do Alpinista.
+</p>
+
+<p>
+É possível que a música seja interrompida e trocada pelo tema de fim de jogo.
+</p>
 
 	</div>
 

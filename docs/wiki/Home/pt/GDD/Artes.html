@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>GDD</title>
+	<title>Artes</title>
 	<meta name='Generator' content='Zim 0.73.5'>
 	<style type='text/css'>
 		a          { text-decoration: none      }
@@ -51,25 +51,25 @@
 
 <!-- Header -->
 <div class='header'>
-	[ <a href='../pt.html'>Prev</a> ]
+	[ <a href='../GDD.html'>Prev</a> ]
 
 	[ <span class='insen'>Index</span> ]
 
-	[ <a href='./GDD/Artes.html'>Next</a> ]
+	[ <a href='./Sistemas.html'>Next</a> ]
 </div>
 
 <hr />
 
 <div class="menu">
 <ul>
-<li><a href="../../Home.html" title="Home" class="page">Home</a>
+<li><a href="../../../Home.html" title="Home" class="page">Home</a>
 <ul>
-<li><a href="../pt.html" title="pt" class="page">pt</a>
+<li><a href="../../pt.html" title="pt" class="page">pt</a>
 <ul>
-<li><b>GDD</b>
+<li><a href="../GDD.html" title="GDD" class="page">GDD</a>
 <ul>
-<li><a href="./GDD/Artes.html" title="Artes" class="page">Artes</a></li>
-<li><a href="./GDD/Sistemas.html" title="Sistemas" class="page">Sistemas</a></li>
+<li><b>Artes</b></li>
+<li><a href="./Sistemas.html" title="Sistemas" class="page">Sistemas</a></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -81,7 +81,7 @@
 
 <div class='pages'>
 	<div class='heading'>
-	<h1>GDD <a name='Home:pt:GDD'></a></h1>
+	<h1>Artes <a name='Home:pt:GDD:Artes'></a></h1>
 	</div>
 
 	<div class='content'>
@@ -89,145 +89,47 @@
 Created domingo 07 março 2021
 </p>
 
-<h2>Título do jogo</h2>
+<h2>Tilesets</h2>
 
 <br>
 
 <p>
-"Alpinist VS The Mount Roraima Alien Invasion" (Alpinista VS A invasão alienígina em Monte Roraima)
+Seguem de acordo com a paisagem do Monte Roraima
 </p>
 
-<h2>Plataformas</h2>
+<h3>Rocha</h3>
 
-<p>
-<ul>
-<li>Desktop
-<ul>
-<li>Windows</li>
-<li>Linux</li>
-<li>Web</li>
-</ul></li>
-</ul>
-</p>
+<br>
 
-<h2>Ferramentas</h2>
+<h3>Grama</h3>
 
-<p>
-Desenvolvimento: <a href="https://nelua.io/" title="Nelua" class="https">Nelua</a>, <a href="https://github.com/Andre-LA/nene" title="Nene" class="https">Nene</a> e <a href="https://github.com/andre-la/rotor-quick" title="Rotor-quick" class="https">Rotor-quick</a><br>
-Wiki: Zim-wiki<br>
-Pixel arte: asesprite<br>
-(Obs: Nene depende da biblioteca <a href="https://www.libsdl.org/" title="SDL2" class="https">SDL2</a> e suas bibliotecas de extensão)
-</p>
+<br>
 
-<h2>Distribuição</h2>
+<h2>Sprites</h2>
 
-<p>
-Exclusivamente digital pela itch.io, como entrada da <a href="https://itch.io/jam/igdfe-game-jam-2" title="IGDFE Game Jam 2" class="https">IGDFE Game Jam 2</a>.
-</p>
+<br>
 
-<h2>Prazo</h2>
-
-<p>
-14 (domingo) de Março de 2021 as 17:59 UTC (14:59 no horário de Brasília)
-</p>
-
-<h2>Contexto</h2>
-
-<p>
-Uma raça alienígina invadiu a Terra sem que fosse detectada para causar o fim do mundo. Entretanto, um alpinista percebeu e fará de tudo para impedir a destruição do planeta.
-</p>
-
-<h2>Jogabilidade</h2>
-
-<p>
-O jogo contém dois modos de jogabilidade:<br>
-<ul>
-<li>Escalada</li>
-<li>Plataforma</li>
-</ul>
-</p>
-
-<p>
-No modo <i>escalada</i>, o personagem está "anexado" à parede adjacente (provavelmente à direita), de forma que o jogador só poderá movê-lo verticalmente.<br>
-No modo <i>plataforma</i>, o jogador se movimentará horizontalmente e pular.
-</p>
-
-<p>
-Além disso, constantemente o jogador será cercado por inimigos, que para se defender e atacar, deverá usar uma arma de fogo.
-</p>
-
-<p>
-Em todos os casos, a jogabilidade é similar ao encontrado no jogo <i>Contra III</i>, de SNES, como demonstrado abaixo no intervalo [11:28, 12:58]:
-</p>
-
-<p>
-<a href="https://youtu.be/534SWHp5uZI?t=692"><img src="./GDD/pasted_image.png" width="256"></a>
-</p>
-
-<p>
-A série de jogos Metal Slug também pode ser comparada, especialmente ao do Metal Slug X, como demonstrado no vídeo abaixo no intervalo [18:47, 20:23]:
-</p>
-
-<p>
-<a href="https://youtu.be/sfParGc8BJw?t=1127"><img src="./GDD/pasted_image001.png" width="320"></a>
-</p>
-
-<p>
-A criação de inimigos será em pontos e trajetos aleatórios a princípio (tendo apenas como predefinido as regiões de posição onde podem ser criados, caso contrário os inimigos podem aparecer de forma inconveniente ao jogador), depois poderá haver uma refatoração para a criação de coreografias específicas, entretanto, é possível que isso não seja implementado devido as limitações de tempo.
-</p>
-
-<p>
-Os inimigos também atiram contra o jogador.
-</p>
-
-<p>
-Em ambos os casos, os personagens contém uma quantidade de Pontos de Vida (PV), e levar um tiro causa um decremento de "<i>X"</i> no PV do personagem intersectado pelo projétil, cujo este <i>X</i> é definido pelo tiro.
-</p>
-
-<p>
-A morte é causada quando o PV do personagem chegam a 0.
-</p>
-
-<p>
-A morte de um inimigo é um efeito especial, seguido de sua destruição (em jogo).<br>
-A morte do jogador causa sua animação de morte, seguido da tela de "Fim de Jogo".
-</p>
-
-<h2>Personagens</h2>
+<h3>Alpinista</h3>
 
 <br>
 
 <p>
-<ul>
-<li>Alpinista</li>
-<li>Aliens 
-<ul>
-<li>Disco voador</li>
-<li>Chefão</li>
-</ul></li>
-</ul>
+Alpinista vai usar a vestimenta de alpinista
 </p>
+
+<h3>Disco voador</h3>
+
+<br>
+
+<h3>Chefão</h3>
+
 
 	</div>
 
 	<br />
 
 	<div class='page-footer'>
-		<b>Backlinks:</b>
 
-		<a href='../../Home.html'>Home</a>
-
-		<br /><br />
-
-			<b>Attachments:</b>
-			<table>
-
-			<tr><td><a href='./GDD/pasted_image.png'>pasted_image.png</a></td><td>&nbsp;</td><td>206kb</td></tr>
-
-
-			<tr><td><a href='./GDD/pasted_image001.png'>pasted_image001.png</a></td><td>&nbsp;</td><td>373kb</td></tr>
-
-			</table>
 	</div>
 
 	

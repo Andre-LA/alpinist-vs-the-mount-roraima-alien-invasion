@@ -5,26 +5,70 @@ Creation-Date: 2021-03-07T16:13:25-03:00
 ====== Sistemas ======
 Created domingo 07 março 2021
 
-===== Movimentação =====
-
-==== Alpinista ====
-
-==== Disco Voador ====
-
-==== Chefão ====
-
 ===== Vida =====
+
+**Componente** que **armazena a quantidade de Pontos de Vida** (PV) da entidade.
+Esta quantidade pode ser incrementada em ''N pontos'', sendo que N pode ser um número negativo, o que causará seu decremento.
+
+O personagem é considerado "morto" quando os PV são 0.
 
 ===== Morte =====
 
 ==== Alpinista ====
 
+Ocorre a seguinte sequência de eventos:
+1. Alpinista não pode mais sofrer dano
+2. Alpinista inicia uma animação de morte
+3. Ao término dessa animação, a tela de "Fim de Jogo" é chamada
+
 ==== Inimigos ====
 
-===== Tiro =====
+Ocorre a seguinte sequência de eventos:
+1. Inimigo torna-se imóvel
+2. Inicia sua animação de morte
+3. Destrói-se (como entidade de jogo)
+
+===== Projétil =====
+
+Entidade **intersectora** com **velocidade não variável**.
+
+A criação dessa entidade é feita pelo sistema de ''Mira''.
+
+A direção dessa ''Velocidade'' é definida em sua criação.
+O projétil só interseccionará com entidades que correspondam com a máscara definida em sua criação.
+
+Ao intersectar, o projétil tentará obter o componente de ''Vida'' do intersectado, e caso com sucesso, decrementará os PV da ''Vida'' obtida.
 
 ===== Mira =====
 
+O **componente** que armazena uma posição (vetor bidimensional) alvo, uma booliana que descreve se um Projétil deverá ser criado (''true'') ou não (''false''), e o último instante (em unidade de tempo) em que criou um ''Projétil'' pela última vez.
+
+Quando um ''Projétil'' é criado, a booliana é definida para ''false ''automaticamente.
+
+O **sistema** de mira calculará um vetor unitário que contém como direção corresponde a direção //da diferença entre a posição da entidade iterada com a posição alvo// (em outras palavras, esse vetor unitário é obtido através da normalização do vetor resultante da diferença entre a posição da entidade iterada que contém o componente de ''Mira'' com a posição alvo contido neste componente)
+
+===== Controladores =====
+
 ==== Alpinista ====
 
+O **componente** ''Controlável por Jogador'' contém algumas preferências de jogabilidade do jogador, como velocidade (escalar) de movimento nas plataformas, de escalada, intensidade de pulo, frequência de tiro, etc.
+
+O **sistema** Controlador do Jogador manipula os componentes do jogador para obter o comportamento desejado, por exemplo, manipulando a posição alvo da ''Mira'', assim como sua booliana, para que o respectivo sistema crie o projétil na direção apontada; ou ainda, manipulando a direção e velocidade escalar do componente ''Velocidade''.
+
 ==== Inimigos ====
+
+Segue o mesmo princípio do controlador e controlável do jogador, entretanto o conceito é aplicado pra inimigos.
+
+A princípio, o comportamento é adicionar velocidade em direção ao jogador se o inimigo estiver, em relação ao jogador, numa distância maior que um valor especificado na programação, ao chegar perto, o inimigo tentará se afastar (isso é, desacelerará e então acelerará pra se afastar).
+
+O inimigo sempre define como posição alvo de sua ''Mira'' a posição do jogador, e atira numa determinada frequência.
+
+===== Tela de Fim de Jogo =====
+
+A tela de fim de jogo é composta por um retângulo (a princípio invisível) que cobre toda a tela e um texto escondido.
+
+Quando é chamada, o texto se posicionará por interpolação linear e o retângulo transicionará para uma cor preta sólida.
+
+Essa tela irá sobrepor a tela do jogo, com excessão talvez do Alpinista.
+
+É possível que a música seja interrompida e trocada pelo tema de fim de jogo.
