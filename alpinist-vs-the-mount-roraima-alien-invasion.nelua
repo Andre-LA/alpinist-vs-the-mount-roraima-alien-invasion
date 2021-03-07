@@ -1,0 +1,33 @@
+require 'src.game_state'
+
+local game: Game.State;
+game:init()
+
+-- run game loop until it quits
+while not game.nene_state.quit do
+  -- update nene's internal state
+  game.nene_state:pool_events()
+
+  do -- processing systems
+
+  end
+
+  do -- rendering systems
+    game.nene_state:render_clear(Nene.Palette.bg)
+
+    do -- in-game rendering
+    end
+
+    -- finalize in-game rendering
+    game.nene_state:render_screen()
+    game.nene_state.camera = {}
+
+    do -- GUI rendering
+    end
+
+    -- present
+    game.nene_state:render_present()
+  end
+end
+
+game:terminate()

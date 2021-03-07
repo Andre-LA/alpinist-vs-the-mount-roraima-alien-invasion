@@ -1,0 +1,45 @@
+require 'nene'
+require 'rotor-quick'
+
+global Game = @record{}
+global Game.Systems = @record{}
+global Game.Components = @record{}
+
+local RQ_Comps, RQ_Sys = RotorQuick.Components, RotorQuick.Systems
+local GM_Sys, GM_Comps = Game.Systems, Game.Components
+
+global Game.static_settings: record{
+  tile_size: integer
+} <const> = {
+  tile_size = 16,
+}
+
+global Game.State = @record{
+  systems: record{},
+  resources: record{},
+  nene_state: Nene.CoreState,
+}
+local State = Game.State
+
+function State:init()
+  -- init nene
+  self.nene_state = (do
+    local ok, err, nene_state = Nene.init('Alpinist VS The Mount Roraima Alien Invasion',
+                                         1280, 720,
+                                         'nene/resources/monogram_extended.ttf', 16,
+                                         Game.static_settings.tile_size * 40,
+                                         Game.static_settings.tile_size * 22 + Game.static_settings.tile_size // 2
+                                       )
+    check(ok, err)
+    return nene_state
+  end)
+
+  -- init systems
+  ## for i, field in ipairs(State.value.fields.systems.type.fields) do
+    self.systems.#|field.name|# = (@#[field.type]#).new()
+  ## end
+end
+
+function State:terminate()
+  self.nene_state:terminate()
+end
