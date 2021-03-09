@@ -1,0 +1,31 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+
+global Game.Entities.Map = @MakeEntity('map',
+  RQ_Comps.Position,
+  RQ_Comps.Tilemap,
+  RQ_Comps.Painter
+)
+local Map = Game.Entities.Map
+
+function Map.create(pos: Nene.Math.Vec2, tilemap: *Nene.Tilemap): (Map, *Entity)
+  local map, map_ent = Map.new{
+    position = {
+      local_position = pos,
+    },
+
+    tilemap = {
+      =tilemap,
+    },
+
+    painter = {
+      color = Nene.Palette.white,
+      active = true,
+    },
+  }
+
+  return map, map_ent
+end

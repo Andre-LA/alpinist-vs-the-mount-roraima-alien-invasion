@@ -1,43 +1,196 @@
 require 'nene'
 require 'rotor-quick'
 
+local Vec2, Rect = Nene.Math.Vec2, Nene.Math.Rect
+
 global Game = @record{}
 global Game.Systems = @record{}
 global Game.Components = @record{}
+global Game.Entities = @record{}
 
-local RQ_Comps, RQ_Sys = RotorQuick.Components, RotorQuick.Systems
-local GM_Sys, GM_Comps = Game.Systems, Game.Components
-
-global Game.static_settings: record{
-  tile_size: integer
-} <const> = {
-  tile_size = 16,
+global Game.IntersectableMasks = @enum{
+  Alpinist   = 1 << 0,
+  Enemy      = 1 << 1,
+  GroundTile = 1 << 2,
+  WallTile   = 1 << 3,
 }
 
+global Game.SpriteLayer = @enum{
+  Background = 0,
+  Alpinist,
+  Enemy,
+  Tile,
+}
+
+local RQ_Comps, RQ_Sys = RotorQuick.Components, RotorQuick.Systems
+local GM_Sys, GM_Comps, GM_Ents = Game.Systems, Game.Components, Game.Entities
+
+global Game.static_settings: record{
+  tile_size: integer,
+  gravity_acceleration: number,
+} <const> = {
+  tile_size = 16,
+  gravity_acceleration = 10,
+}
+
+require 'entities'
+
+local MapResouces = @record{
+  texture: Nene.Texture,
+  texture_atlas: Nene.TextureAtlas,
+  tilemap: Nene.Tilemap
+}
+
+function MapResouces:load(path: stringview, nene_state: *Nene.CoreState)
+  local ok, err, tex = nene_state:load_texture(path)
+  check(ok, err)
+
+  self.texture = tex
+  self.texture_atlas = {
+    texture = &self.texture,
+    unit_width  = Game.static_settings.tile_size,
+    unit_height = Game.static_settings.tile_size,
+  }
+  self.tilemap.atlas = &self.texture_atlas
+end
+
+local SpriteResouces = @record{
+  texture: Nene.Texture,
+  texture_atlas: Nene.TextureAtlas,
+  spritesheet: Nene.SpriteSheet
+}
+
+function SpriteResouces:load(path: stringview, nene_state: *Nene.CoreState)
+  local ok, err, tex = nene_state:load_texture(path)
+  check(ok, err)
+
+  self.texture = tex
+  self.texture_atlas.texture = &self.texture
+  self.spritesheet.atlas = &self.texture_atlas
+end
+
 global Game.State = @record{
-  systems: record{},
-  resources: record{},
+  systems: record{
+    -- game specific processing systems
+    alpinist_controller: GM_Sys.AlpinistController,
+
+    -- game general processing systems
+    gravity_applier: RQ_Sys.GravityApplier,
+    velocity_applier: RQ_Sys.VelocityApplier,
+    position_hierarchy: RQ_Sys.PositionHierarchy,
+    intersectable_update: RQ_Sys.IntersectableUpdate,
+    intersections_detector: RQ_Sys.IntersectionsDetector,
+    collisions: RQ_Sys.Collisions,
+    follower_system: RQ_Sys.FollowerSystem,
+    camera_holder_system: RQ_Sys.CameraHolderSystem,
+    sprite_animation: RQ_Sys.SpriteAnimation,
+
+    -- game general painting systems
+    shape_painter: RQ_Sys.ShapePainter,
+    sprite_painter: RQ_Sys.SpritePainter,
+    tilemap_painter: RQ_Sys.TilemapPainter,
+
+    -- debug painting systems
+    intersectable_painter: RQ_Sys.IntersectablePainter,
+    intersections_painter: RQ_Sys.IntersectionsPainter,
+  },
+  resources: record{
+    alpinist: SpriteResouces,
+    map: MapResouces,
+  },
   nene_state: Nene.CoreState,
 }
 local State = Game.State
 
-function State:init()
+function State:init(nene_state: Nene.CoreState)
   -- init nene
-  self.nene_state = (do
-    local ok, err, nene_state = Nene.init('Alpinist VS The Mount Roraima Alien Invasion',
-                                         1280, 720,
-                                         'nene/resources/monogram_extended.ttf', 16,
-                                         Game.static_settings.tile_size * 40,
-                                         Game.static_settings.tile_size * 22 + Game.static_settings.tile_size // 2
-                                       )
-    check(ok, err)
-    return nene_state
-  end)
+  self.nene_state = nene_state
+
+  -- load resources
+  do
+    -- alpinist
+    self.resources.alpinist:load('resources/arts/characters/Personagem.png', self.nene_state)
+    self.resources.alpinist.texture_atlas.unit_width = 31
+    self.resources.alpinist.texture_atlas.unit_height = 33
+
+    -- map
+    self.resources.map:load('resources/arts/tileset/Tileset.png', self.nene_state)
+    self.resources.map.tilemap.width  = 10
+    self.resources.map.tilemap.height = 5
+    self.resources.map.tilemap.map = {
+       0,  1,  1,  1,  1,  1,  1,  1,  1,  2,
+      16, 17, 17, 17, 17, 17, 17, 17, 17, 18,
+      16, 17, 17, 17, 17, 17, 17, 17, 17, 18,
+      16, 17, 17, 17, 17, 17, 17, 17, 17, 18,
+      32, 33, 33, 33, 33, 33, 33, 33, 33, 34
+    }
+  end
 
   -- init systems
   ## for i, field in ipairs(State.value.fields.systems.type.fields) do
     self.systems.#|field.name|# = (@#[field.type]#).new()
   ## end
+end
+
+function State:systems_update(ent: *Entity)
+  -- update systems
+  ## for i, field in ipairs(State.value.fields.systems.type.fields) do
+    self.systems.#|field.name|#:update(ent)
+  ## end
+end
+
+function State:create_player(pos: Vec2): GM_Ents.Alpinist
+  local pl, pl_ent = GM_Ents.Alpinist.create(pos, self.resources.alpinist.spritesheet)
+  self:systems_update(pl_ent)
+  return pl
+end
+
+function State:create_surf_collider(pos: Vec2, mask: Game.IntersectableMasks): GM_Ents.SurfaceCollider
+  local surf_col, surf_col_ent = GM_Ents.SurfaceCollider.create(pos, mask)
+  self:systems_update(surf_col_ent)
+  return surf_col
+end
+
+function State:create_map(pos: Vec2): GM_Ents.Map
+  local map, map_ent = GM_Ents.Map.create(pos, self.resources.map.tilemap)
+  self:systems_update(map_ent)
+
+  local tm = self.resources.map.tilemap
+  local tm_w, tm_h = tm.width, tm.height
+
+  local map_len = #tm.map
+
+  local i_offset = 0
+
+  for i = 0, < map_len do
+    -- l: left; r: right; t: top; b: bottom | lt: left top; etc
+    local l_tile = i > 0              and tm.map[i - 1]  or -1
+    local r_tile = i < map_len - 1    and tm.map[i + 1]  or -1
+    local t_tile = i > tm_w           and tm.map[i - tm_w] or -1
+    local b_tile = i < map_len - tm_w and tm.map[i + tm_w] or -1
+
+    local lt_tile = i > tm_w + 1 and tm.map[i - tm_w - 1] or -1
+    local rt_tile = i > tm_w - 1 and tm.map[i - tm_w + 1] or -1
+    local lb_tile = i < map_len - tm_w + 1 and tm.map[i + tm_w - 1] or -1
+    local rb_tile = i < map_len - tm_w - 1 and tm.map[i + tm_w + 1] or -1
+
+    local is_surface_tile = (
+      (l_tile < 0 or r_tile < 0 or t_tile < 0 or b_tile < 0)
+      or
+      (lt_tile < 0 or lb_tile < 0 or rt_tile < 0 or rb_tile < 0)
+    )
+
+    local cur_tile = tm.map[i]
+
+    if cur_tile < 0 then -- cur_tile is negative, so this will increate i_offset
+      i_offset = i_offset - cur_tile - 1
+    elseif is_surface_tile then
+      local tile_pos = tm:get_position_from_index(i + i_offset)
+      self:create_surf_collider(tile_pos + pos, Game.IntersectableMasks.GroundTile)
+    end
+  end
+
+  return map
 end
 
 function State:terminate()

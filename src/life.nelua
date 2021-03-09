@@ -1,0 +1,10 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+global Game.Components.Life = @record{
+  points: integer
+}
+
+local Life = Game.Components.Life
+## impl_is_component(Life)

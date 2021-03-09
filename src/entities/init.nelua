@@ -1,0 +1,4 @@
+require 'entities.alpinist'
+require 'entities.map'
+require 'entities.flying_disc'
+require 'entities.surface_collider'

@@ -1,0 +1,98 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+require 'life'
+require 'target'
+require 'entities.alpinist.controllable'
+require 'entities.alpinist.controller'
+
+local RQ_Comps, GM_Comps, GM_Sys = RotorQuick.Components, Game.Components, Game.Systems
+
+global Game.Entities.Alpinist = @MakeEntity('alpinist',
+  GM_Comps.Life,
+  GM_Comps.Target,
+  GM_Comps.AlpinistControllable,
+
+  RQ_Comps.Position,
+
+  RQ_Comps.Gravity,
+  RQ_Comps.Velocity,
+
+  RQ_Comps.Intersectable,
+  RQ_Comps.Intersections,
+  RQ_Comps.Collider,
+
+  RQ_Comps.Sprite,
+  RQ_Comps.Painter
+)
+local Alpinist = Game.Entities.Alpinist
+
+function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (Alpinist, *Entity)
+  local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
+  local tile_size <const> = Game.static_settings.tile_size
+
+  local alpinist, alpinist_ent = Alpinist.new{
+    life = {},
+
+    target = {},
+
+    alpinist_controllable = {
+      run_speed = tile_size * 8,
+      jump_force = gravity_acceleration / 3,
+    },
+
+    position = {
+      local_position = pos,
+    },
+
+    gravity = {
+      active = true,
+      acceleration = gravity_acceleration,
+      direction = {0, 1},
+    },
+
+    velocity = {
+      active = true,
+    },
+
+    intersectable = {
+      mask = Game.IntersectableMasks.Alpinist,
+    },
+
+    intersections = {
+      on_enter_callback =
+      function(self_intersectable: *RQ_Comps.Intersectable, self_intersections: *RQ_Comps.Intersections, other_intersectable: *RQ_Comps.Intersectable)
+
+        if other_intersectable.mask == Game.IntersectableMasks.GroundTile then
+          local controllable_opt = GM_Comps.AlpinistControllable.get_entry_from_entity_id(self_intersectable.entity_id)
+          if controllable_opt.filled then
+            local controllable = controllable_opt:get()
+            GM_Sys.AlpinistController.on_ground_intersected(controllable)
+          end
+        end
+      end
+    },
+
+    collider = {
+      tolerance = 2,
+      mask = Game.IntersectableMasks.GroundTile | Game.IntersectableMasks.WallTile,
+    },
+
+    sprite = {
+      =spritesheet,
+      layer = Game.SpriteLayer.Alpinist,
+    },
+
+    painter = {
+      color = Nene.Palette.white,
+      active = true,
+    },
+  }
+
+  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, { 18, 34} }
+  local intersectable = alpinist:get_intersectable()
+  intersectable:init(pos, &intersectable_vertices)
+
+  return alpinist, alpinist_ent
+end

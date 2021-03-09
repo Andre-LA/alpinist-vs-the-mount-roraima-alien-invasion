@@ -1,0 +1,12 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+global Game.Components.Target = @record{
+  target_pos: Nene.Math.Vec2,
+  should_shoot: boolean,
+  last_shoot: uinteger,
+}
+
+local Target = Game.Components.Target
+## impl_is_component(Target)

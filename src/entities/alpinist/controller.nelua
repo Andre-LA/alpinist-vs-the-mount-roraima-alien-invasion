@@ -1,0 +1,56 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+
+global Game.Systems.AlpinistController = @MakeSystem('AlpinistController', @record{
+  alpinist_controllable: GM_Comps.AlpinistControllable,
+  velocity: RQ_Comps.Velocity,
+})
+
+local AlpinistController = Game.Systems.AlpinistController
+local AlpinistState = GM_Comps.AlpinistControllable.AlpinistState
+
+local Controls = @record{
+  mov_left: boolean,
+  mov_right: boolean,
+  jump: boolean,
+}
+
+-- this function should be called if the alpinist intersects with the ground
+function AlpinistController.on_ground_intersected(controllable: *GM_Comps.AlpinistControllable)
+  controllable.state = AlpinistState.OnGround
+end
+
+function AlpinistController:run(nene_state: *Nene.CoreState)
+  for _, components in self:iterate_components() do
+    local controllable = components.alpinist_controllable
+    local velocity = components.velocity
+
+    local controls: Controls <const> = {
+      mov_left = nene_state:get_scancode(SDL_SCANCODE_LEFT),
+      mov_right = nene_state:get_scancode(SDL_SCANCODE_RIGHT),
+      jump = nene_state:get_scancode(SDL_SCANCODE_SPACE, true)
+    }
+
+    switch controllable.state
+      case AlpinistState.OnGround, AlpinistState.Jumping then
+        -- horizontal run
+        local run_diretion = (do
+          if controls.mov_left then return -1
+          elseif controls.mov_right then return 1
+          else return 0
+          end
+        end)
+
+        velocity.final_velocity.x = controllable.run_speed * run_diretion * nene_state.deltatime
+
+        -- jumping, only valid while on ground, the state
+        if controls.jump and controllable.state == AlpinistState.OnGround then
+          velocity.final_velocity.y = -controllable.jump_force
+          controllable.state = AlpinistState.Jumping
+        end
+    end
+  end
+end

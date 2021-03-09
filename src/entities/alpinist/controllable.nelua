@@ -1,0 +1,20 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+local AlpinistState = @enum{
+  OnGround = 0,
+  Jumping,
+  Climbing
+}
+
+global Game.Components.AlpinistControllable = @record{
+  run_speed: number,
+  jump_force: number,
+  state: AlpinistState,
+}
+
+local AlpinistControllable = Game.Components.AlpinistControllable
+## impl_is_component(AlpinistControllable)
+
+global Game.Components.AlpinistControllable.AlpinistState = AlpinistState

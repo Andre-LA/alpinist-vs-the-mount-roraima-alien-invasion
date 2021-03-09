@@ -1,7 +1,19 @@
 require 'src.game_state'
 
 local game: Game.State;
-game:init()
+do
+  local ok, err, nene_state = Nene.init('Alpinist VS The Mount Roraima Alien Invasion',
+                                        1280, 720,
+                                        'nene/resources/monogram_extended.ttf', 16,
+                                        Game.static_settings.tile_size * 40,
+                                        Game.static_settings.tile_size * 22 + Game.static_settings.tile_size // 2
+                                       )
+  check(ok, err)
+  game:init(nene_state)
+end
+
+game:create_player({32, 32})
+game:create_map({16, 128})
 
 -- run game loop until it quits
 while not game.nene_state.quit do
@@ -9,13 +21,34 @@ while not game.nene_state.quit do
   game.nene_state:pool_events()
 
   do -- processing systems
+    game.systems.alpinist_controller:run(game.nene_state)
 
+    game.systems.gravity_applier:run(game.nene_state.deltatime)
+
+    game.systems.intersectable_update:run()
+    game.systems.intersections_detector:run()
+    game.systems.collisions:run()
+
+    game.systems.velocity_applier:run()
+
+    game.systems.position_hierarchy:run()
+    game.systems.follower_system:run()
+    game.systems.camera_holder_system:run()
+
+    game.systems.sprite_animation:run(game.nene_state:get_ms_time())
   end
 
   do -- rendering systems
     game.nene_state:render_clear(Nene.Palette.bg)
 
     do -- in-game rendering
+      game.systems.tilemap_painter:run(game.nene_state)
+      game.systems.sprite_painter:run(game.nene_state)
+
+      ## if SHOW_DEV_INFO then
+        game.systems.intersectable_painter:run(game.nene_state)
+        game.systems.intersections_painter:run(game.nene_state)
+      ## end
     end
 
     -- finalize in-game rendering
