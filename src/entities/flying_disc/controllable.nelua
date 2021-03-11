@@ -1,0 +1,36 @@
+require 'vector'
+require 'rotor'
+require 'rotor-quick.makers'
+
+local FlyingDiscState = @enum{
+  Flying = 0,
+  Dead,
+}
+
+global Game.Components.FlyingDiscControllable = @record{
+  min_distance: number,
+  flying_speed: number,
+  shoot_interval: number,
+  state: FlyingDiscState,
+
+  ids: record{
+    life: GenerationalIndex,
+    target: GenerationalIndex,
+    flying_disc_controllable: GenerationalIndex,
+
+    position: GenerationalIndex,
+    velocity: GenerationalIndex,
+
+    intersectable: GenerationalIndex,
+    intersections: GenerationalIndex,
+    collider: GenerationalIndex,
+
+    sprite: GenerationalIndex,
+    painter: GenerationalIndex
+  }
+}
+
+local FlyingDiscControllable = Game.Components.FlyingDiscControllable
+## impl_is_component(FlyingDiscControllable)
+
+global Game.Components.FlyingDiscControllable.FlyingDiscState = FlyingDiscState

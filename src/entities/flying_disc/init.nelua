@@ -1,0 +1,130 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+require 'life'
+require 'target'
+require 'entities.flying_disc.controllable'
+require 'entities.flying_disc.controller'
+
+local RQ_Comps, GM_Comps, GM_Sys = RotorQuick.Components, Game.Components, Game.Systems
+
+global Game.Entities.FlyingDisc = @MakeEntity('flying_disc',
+  GM_Comps.Life,
+  GM_Comps.Target,
+  GM_Comps.FlyingDiscControllable,
+
+  RQ_Comps.Position,
+  RQ_Comps.Velocity,
+
+  RQ_Comps.Intersectable,
+  RQ_Comps.Intersections,
+  RQ_Comps.Collider,
+
+  RQ_Comps.Sprite,
+  RQ_Comps.Painter
+)
+local FlyingDisc = Game.Entities.FlyingDisc
+
+function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (FlyingDisc, *Entity)
+  local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
+  local tile_size <const> = Game.static_settings.tile_size
+
+  local flying_disc, flying_disc_ent = FlyingDisc.new{
+    life = {
+      points = 2,
+    },
+
+    target = {},
+
+    flying_disc_controllable = {
+      min_distance = tile_size * 7,
+      flying_speed = tile_size / 2,
+      shoot_interval = 2500,
+    },
+
+    position = {
+      local_position = pos,
+    },
+
+    velocity = {
+      active = true,
+      max_velocity = tile_size * 12,
+    },
+
+    intersectable = {
+      mask = Game.IntersectableMasks.Enemy,
+    },
+
+    intersections = {
+      on_enter_callback = function(
+          self_intersectable: *RQ_Comps.Intersectable,
+          self_intersections: *RQ_Comps.Intersections,
+          other_intersectable: *RQ_Comps.Intersectable
+        )
+          if other_intersectable.mask == Game.IntersectableMasks.ProjAlpinist then
+            local life_opt = GM_Comps.Life.get_entry_from_entity_id(self_intersectable.entity_id)
+            if life_opt.filled then
+              local life = life_opt:get()
+              life.points = life.points - 1
+
+              if life.points == 0 then
+                local controllable_opt = GM_Comps.FlyingDiscControllable.get_entry_from_entity_id(self_intersectable.entity_id)
+                if controllable_opt.filled then
+                  local controllable = controllable_opt:get()
+
+                  local entity_opt = RotorQuick.storages.entity:get_entry(self_intersectable.entity_id)
+                  if entity_opt.filled then
+                    do
+                      entity_opt:get():clear()
+                    end
+                    RotorQuick.storages.entity:remove_entry(self_intersectable.entity_id)
+
+                    local FlyingDisc = Game.Entities.FlyingDisc
+                    ## for i, field in ipairs(FlyingDisc.value.fields) do
+                      ## if field.name ~= 'entity_id' and field.name ~= 'flying_disc_controllable_id' then
+                        ## local actual_fname = field.name:sub(1, -4)
+                        local id = controllable.ids.#|actual_fname|#
+                        RotorQuick.storages.#|actual_fname|#:remove_entry(controllable.ids.#|actual_fname|#)
+                      ## end
+                    ## end
+
+                    RotorQuick.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
+                  end
+                end
+              end
+            end
+          end
+        end
+    },
+
+    collider = {
+      tolerance = 2,
+      mask = Game.IntersectableMasks.SurfaceTile,
+    },
+
+    sprite = {
+      =spritesheet,
+      layer = Game.SpriteLayer.Enemy,
+    },
+
+    painter = {
+      color = Nene.Palette.white,
+      active = true,
+    },
+  }
+
+  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, { 20, 26} }
+  local intersectable = flying_disc:get_intersectable()
+  intersectable:init(pos, &intersectable_vertices)
+
+  local controllable = flying_disc:get_flying_disc_controllable()
+
+  ## for i, field in ipairs(FlyingDisc.value.fields) do
+    ## if field.name ~= 'entity_id' then
+      controllable.ids.#|field.name:sub(1, -4)|# = flying_disc.#|field.name|#
+    ## end
+  ## end
+
+  return flying_disc, flying_disc_ent
+end
