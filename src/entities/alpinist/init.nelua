@@ -33,13 +33,15 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
   local tile_size <const> = Game.static_settings.tile_size
 
   local alpinist, alpinist_ent = Alpinist.new{
-    life = {},
+    life = {
+      points = 10,
+    },
 
     target = {},
 
     alpinist_controllable = {
-      run_speed = tile_size * 8,
-      jump_force = gravity_acceleration / 3,
+      climb_speed = tile_size * 6,
+      shoot_interval = 150,
     },
 
     position = {
@@ -47,7 +49,7 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
     },
 
     gravity = {
-      active = true,
+      active = false,
       acceleration = gravity_acceleration,
       direction = {0, 1},
     },
@@ -61,22 +63,24 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
     },
 
     intersections = {
-      on_enter_callback =
-      function(self_intersectable: *RQ_Comps.Intersectable, self_intersections: *RQ_Comps.Intersections, other_intersectable: *RQ_Comps.Intersectable)
-
-        if other_intersectable.mask == Game.IntersectableMasks.GroundTile then
-          local controllable_opt = GM_Comps.AlpinistControllable.get_entry_from_entity_id(self_intersectable.entity_id)
-          if controllable_opt.filled then
-            local controllable = controllable_opt:get()
-            GM_Sys.AlpinistController.on_ground_intersected(controllable)
+      on_enter_callback = function(
+          self_intersectable: *RQ_Comps.Intersectable,
+          self_intersections: *RQ_Comps.Intersections,
+          other_intersectable: *RQ_Comps.Intersectable
+        )
+          if other_intersectable.mask == Game.IntersectableMasks.ProjEnemy then
+            local life_opt = GM_Comps.Life.get_entry_from_entity_id(self_intersectable.entity_id)
+            if life_opt.filled then
+              local life = life_opt:get()
+              life.points = life.points - 1
+            end
           end
         end
-      end
     },
 
     collider = {
       tolerance = 2,
-      mask = Game.IntersectableMasks.GroundTile | Game.IntersectableMasks.WallTile,
+      mask = Game.IntersectableMasks.SurfaceTile,
     },
 
     sprite = {

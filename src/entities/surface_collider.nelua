@@ -10,22 +10,22 @@ global Game.Entities.SurfaceCollider = @MakeEntity('surf_col',
 )
 local SurfaceCollider = Game.Entities.SurfaceCollider
 
-function SurfaceCollider.create(pos: Nene.Math.Vec2, mask: Game.IntersectableMasks): (SurfaceCollider, *Entity)
-  local surf_col, suf_col_ent = SurfaceCollider.new{
+function SurfaceCollider.create(pos: Nene.Math.Vec2, size: Nene.Math.Vec2): (SurfaceCollider, *Entity)
+  local surf_col, surf_col_ent = SurfaceCollider.new{
     position = {
       local_position = pos,
     },
 
     intersectable = {
-      =mask,
+      mask = Game.IntersectableMasks.SurfaceTile,
     },
   }
 
   local tile_size = Game.static_settings.tile_size
-  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, {tile_size, tile_size} }
+  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, {tile_size * size.x, tile_size * size.y} }
 
   local intersectable = surf_col:get_intersectable()
   intersectable:init(pos, &intersectable_vertices)
 
-  return surf_col, suf_col_ent
+  return surf_col, surf_col_ent
 end

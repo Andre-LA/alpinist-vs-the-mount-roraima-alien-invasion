@@ -6,6 +6,8 @@ local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
 
 global Game.Systems.AlpinistController = @MakeSystem('AlpinistController', @record{
   alpinist_controllable: GM_Comps.AlpinistControllable,
+  target: GM_Comps.Target,
+  position: RQ_Comps.Position,
   velocity: RQ_Comps.Velocity,
 })
 
@@ -13,44 +15,69 @@ local AlpinistController = Game.Systems.AlpinistController
 local AlpinistState = GM_Comps.AlpinistControllable.AlpinistState
 
 local Controls = @record{
-  mov_left: boolean,
-  mov_right: boolean,
-  jump: boolean,
+  mov_up: boolean,
+  mov_down: boolean,
+  shooting: boolean,
 }
 
--- this function should be called if the alpinist intersects with the ground
-function AlpinistController.on_ground_intersected(controllable: *GM_Comps.AlpinistControllable)
-  controllable.state = AlpinistState.OnGround
-end
-
-function AlpinistController:run(nene_state: *Nene.CoreState)
+function AlpinistController:run(
+  nene_state: *Nene.CoreState,
+  in_game_mouse_pos: Nene.Math.Vec2,
+  mouse_is_down: boolean,
+  proj_instantiator: function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+)
   for _, components in self:iterate_components() do
     local controllable = components.alpinist_controllable
+    local target = components.target
     local velocity = components.velocity
+    local position = components.position
 
     local controls: Controls <const> = {
-      mov_left = nene_state:get_scancode(SDL_SCANCODE_LEFT),
-      mov_right = nene_state:get_scancode(SDL_SCANCODE_RIGHT),
-      jump = nene_state:get_scancode(SDL_SCANCODE_SPACE, true)
+      mov_up   = nene_state:get_scancode(SDL_SCANCODE_UP) or nene_state:get_scancode(SDL_SCANCODE_W),
+      mov_down = nene_state:get_scancode(SDL_SCANCODE_DOWN) or nene_state:get_scancode(SDL_SCANCODE_S),
+      shooting = mouse_is_down,
     }
 
+    velocity.final_velocity = {0, 0}
+
     switch controllable.state
-      case AlpinistState.OnGround, AlpinistState.Jumping then
-        -- horizontal run
+      case AlpinistState.Climbing then
+        -- vertical movement
         local run_diretion = (do
-          if controls.mov_left then return -1
-          elseif controls.mov_right then return 1
+          if controls.mov_up then return -1
+          elseif controls.mov_down then return 1
           else return 0
           end
         end)
 
-        velocity.final_velocity.x = controllable.run_speed * run_diretion * nene_state.deltatime
+        velocity.final_velocity.y = controllable.climb_speed * run_diretion * nene_state.deltatime
 
-        -- jumping, only valid while on ground, the state
-        if controls.jump and controllable.state == AlpinistState.OnGround then
-          velocity.final_velocity.y = -controllable.jump_force
-          controllable.state = AlpinistState.Jumping
+        -- if it's shooting, should stop and change state
+        if controls.shooting then
+          velocity.final_velocity.y = 0
+          controllable.state = AlpinistState.Shooting
+        end
+
+      case AlpinistState.Shooting then
+        -- if it's not shooting, should stop and change state
+        if not controls.shooting then
+          controllable.state = AlpinistState.Climbing
+          continue
+        end
+
+        local current_time = nene_state:get_ms_time()
+        local time_diff = current_time - target.last_shoot
+
+        if controls.shooting and time_diff >= controllable.shoot_interval then
+          target.last_shoot = current_time
+
+          -- shoot in the direction of the mouse cursor position relative to alpinist's position
+          local alpinist_gl_pos = position:get_global_position()
+          local proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - alpinist_gl_pos)
+          proj_instantiator(alpinist_gl_pos, proj_dir)
         end
     end
+
+    velocity:add_velocity({0, Game.static_settings.tile_size * nene_state.deltatime})
   end
 end

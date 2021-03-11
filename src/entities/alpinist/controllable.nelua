@@ -3,14 +3,15 @@ require 'rotor'
 require 'rotor-quick.makers'
 
 local AlpinistState = @enum{
-  OnGround = 0,
-  Jumping,
-  Climbing
+  Climbing = 0,
+  Shooting,
+  Dying,
+  Dead,
 }
 
 global Game.Components.AlpinistControllable = @record{
-  run_speed: number,
-  jump_force: number,
+  climb_speed: number,
+  shoot_interval: number,
   state: AlpinistState,
 }
 
