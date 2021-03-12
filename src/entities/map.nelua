@@ -25,8 +25,6 @@ function MapController:run(dt: number, map_height: number)
 
     local gl_pos_y = position:get_global_position().y
 
-    print(_, gl_pos_y)
-
     if gl_pos_y <= map_height then
       velocity.final_velocity.y = ss.tile_size * ss.map_vel * dt
     else
