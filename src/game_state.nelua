@@ -31,9 +31,11 @@ global Game.SpriteLayer = @enum{
 global Game.static_settings: record{
   tile_size: integer,
   gravity_acceleration: number,
+  map_vel: number,
 } <const> = {
   tile_size = 16,
   gravity_acceleration = 10,
+  map_vel = 1,
 }
 
 require 'entities'
@@ -83,6 +85,7 @@ global Game.State = @record{
     -- game specific processing systems
     alpinist_controller: GM_Sys.AlpinistController,
     flying_disc_controller: GM_Sys.FlyingDiscController,
+    map_controller: GM_Sys.MapController,
 
     -- game general processing systems
     gravity_applier: RQ_Sys.GravityApplier,
@@ -128,12 +131,8 @@ function State:init(nene_state: Nene.CoreState)
     -- map
     self.resources.map:load('resources/arts/tileset/Tileset.png', self.nene_state)
     self.resources.map.tilemap.width  = 3
-    self.resources.map.tilemap.height = 23
+    self.resources.map.tilemap.height = 19
     self.resources.map.tilemap.map = {
-      16, 17, 17,
-      16, 17, 17,
-      16, 17, 17,
-      16, 17, 17,
       16, 17, 17,
       16, 17, 17,
       16, 17, 17,
@@ -215,8 +214,6 @@ end
 function State:create_map(pos: Vec2): GM_Ents.Map
   local map, map_ent = GM_Ents.Map.create(pos, self.resources.map.tilemap)
   self:systems_update(map_ent)
-
-  self:create_surf_collider(pos, {1, self.resources.map.tilemap.height})
   return map
 end
 

@@ -4,8 +4,44 @@ require 'rotor-quick.makers'
 
 local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
 
+local MapControllable = @record{
+  b: byte
+}
+## impl_is_component(MapControllable)
+
+global Game.Systems.MapController = @MakeSystem('map_controller', @record{
+  map_controllable: MapControllable, -- works as a tag
+  position: RQ_Comps.Position,
+  velocity: RQ_Comps.Velocity,
+})
+local MapController = Game.Systems.MapController
+
+function MapController:run(dt: number, map_height: number)
+  local ss = Game.static_settings
+
+  for _, components in self:iterate_components() do
+    local velocity = components.velocity
+    local position = components.position
+
+    local gl_pos_y = position:get_global_position().y
+
+    print(_, gl_pos_y)
+
+    if gl_pos_y <= map_height then
+      velocity.final_velocity.y = ss.tile_size * ss.map_vel * dt
+    else
+      velocity.final_velocity.y = 0
+      position.local_position.y = -map_height + 4
+    end
+  end
+end
+
 global Game.Entities.Map = @MakeEntity('map',
+  MapControllable,
+
   RQ_Comps.Position,
+  RQ_Comps.Velocity,
+
   RQ_Comps.Tilemap,
   RQ_Comps.Painter
 )
@@ -15,6 +51,10 @@ function Map.create(pos: Nene.Math.Vec2, tilemap: *Nene.Tilemap): (Map, *Entity)
   local map, map_ent = Map.new{
     position = {
       local_position = pos,
+    },
+
+    velocity = {
+      active = true,
     },
 
     tilemap = {

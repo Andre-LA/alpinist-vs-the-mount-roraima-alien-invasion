@@ -6,8 +6,7 @@ do
   local ok, err, nene_state = Nene.init('Alpinist VS The Mount Roraima Alien Invasion',
                                         800, 600,
                                         'nene/resources/monogram_extended.ttf', 16,
-                                        800 // 2, 600 // 2
-                                       )
+                                        800 // 2, 600 // 2)
   check(ok, err)
   game:init(nene_state)
 end
@@ -21,8 +20,12 @@ local alpinist = game:create_alpinist({game.nene_state.screen_texture.width - Ga
 local flying_disc = game:create_flying_disc({32, 64})
 
 local map_pos_x <const> = game.nene_state.screen_texture.width - Game.static_settings.tile_size * 3
+local map_height <const> = Game.static_settings.tile_size * game.resources.map.tilemap.height
 
 game:create_map({map_pos_x, 0})
+game:create_map({map_pos_x, -map_height})
+
+game:create_surf_collider({map_pos_x, 0}, {1, game.resources.map.tilemap.height})
 
 local ProjParams = @record{pos: Nene.Math.Vec2, dir: Nene.Math.Vec2, should_create: boolean}
 local proj_alpinist: ProjParams, proj_flying_disc: ProjParams;
@@ -53,6 +56,8 @@ while not game.nene_state.quit do
   local mstate = SDL_GetMouseState(&mx, &my)
 
   do -- processing systems
+    game.systems.map_controller:run(game.nene_state.deltatime, map_height)
+
     game.systems.alpinist_controller:run(game.nene_state,
                                          {mx * win_screen_ratio.x, my * win_screen_ratio.y},
                                          mstate ~= 0,

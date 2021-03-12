@@ -78,6 +78,7 @@ function AlpinistController:run(
         end
     end
 
-    velocity:add_velocity({0, Game.static_settings.tile_size * nene_state.deltatime})
+    local map_movement = Game.static_settings.map_vel * Game.static_settings.tile_size * nene_state.deltatime
+    velocity:add_velocity({0, map_movement})
   end
 end
