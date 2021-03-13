@@ -1,83 +1,39 @@
 require 'vector'
 require 'src.game_state'
+require 'src.level'
 
-local game: Game.State;
+local game = Game.State.new('Alpinist VS The Mount Roraima Alien Invasion', 800, 600)
+game:init()
 
-do
-  local ok, err, nene_state = Nene.init('Alpinist VS The Mount Roraima Alien Invasion',
-                                        800, 600,
-                                        'nene/resources/monogram_extended.ttf', 16,
-                                        800 // 2, 600 // 2)
-  check(ok, err)
-  game:init(nene_state)
-end
-
-local win_screen_ratio: Nene.Math.Vec2 = {
-  game.nene_state.screen_texture.width / 800,
-  game.nene_state.screen_texture.height / 600,
-}
-
-local alpinist = game:create_alpinist({game.nene_state.screen_texture.width - Game.static_settings.tile_size * 4, 32})
-game:create_flying_disc({32, 64})
-
-local map_pos_x <const> = game.nene_state.screen_texture.width - Game.static_settings.tile_size * 3
-local map_height <const> = Game.static_settings.tile_size * game.resources.map.tilemap.height
-
-game:create_map({map_pos_x, 0})
-game:create_map({map_pos_x, -map_height})
-
-game:create_surf_collider({map_pos_x, 0}, {1, game.resources.map.tilemap.height})
-
-local ProjParams = @record{pos: Nene.Math.Vec2, dir: Nene.Math.Vec2, should_create: boolean}
-local proj_alpinist: ProjParams, proj_flying_disc: vector(ProjParams);
-
-local spawn_timer = game.nene_state.deltatime * 0
+local level = Game.Level.new(game)
+level:init(game)
 
 -- run game loop until it quits
 while not game.nene_state.quit do
-  if proj_alpinist.should_create then
-    game:create_projectile(proj_alpinist.pos, proj_alpinist.dir,
-                           Game.Entities.Projectile.Speed.Alpinist, Game.IntersectableMasks.ProjAlpinist)
-  end
-
-  for i = 0, < #proj_flying_disc do
-    game:create_projectile(proj_flying_disc[i].pos, proj_flying_disc[i].dir,
-                           Game.Entities.Projectile.Speed.Enemy, Game.IntersectableMasks.ProjEnemy)
-  end
-
-  proj_alpinist.should_create = false
-  proj_flying_disc:clear()
+  level:update(game)
 
   -- update nene's internal state
   game.nene_state:pool_events()
-
-  spawn_timer = spawn_timer + game.nene_state.deltatime
-  print('~>', spawn_timer)
-
-  if spawn_timer >= 1 then
-    game:create_flying_disc({32, 64})
-    spawn_timer = 0
-  end
 
   -- TODO: abstract this on nene
   local mx: cint, my: cint;
   local mstate = SDL_GetMouseState(&mx, &my)
 
   do -- processing systems
-    game.systems.map_controller:run(game.nene_state.deltatime, map_height)
+    game.systems.map_controller:run(game.nene_state.deltatime, level.map_height)
 
     game.systems.alpinist_controller:run(game.nene_state,
-                                         {mx * win_screen_ratio.x, my * win_screen_ratio.y},
+                                         {mx * level.win_screen_ratio.x, my * level.win_screen_ratio.y},
                                          mstate ~= 0,
                                          function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                           proj_alpinist = {=pos, =dir, true}
+                                           level:alpinist_shoot(pos, dir)
                                          end)
 
     game.systems.flying_disc_controller:run(game.nene_state,
-                                            alpinist.position_id,
-                                            map_pos_x,
+                                            level.alpinist.position_id,
+                                            level.map_pos_x,
                                             function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                              proj_flying_disc:push({=pos, =dir, true})
+                                              level:flying_disc_shoot(pos, dir)
                                             end)
 
     game.systems.gravity_applier:run(game.nene_state.deltatime)
