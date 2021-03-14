@@ -166,7 +166,7 @@ function State.new(title: string, win_width: integer, win_height: integer)
   local screen_w: integer, screen_h: integer = win_width // 2, win_height // 2
 
   local ok, err, nene_state = Nene.init(title, win_width, win_height,
-                                        'nene/resources/monogram_extended.ttf', 16,
+                                        'resources/monogram_extended.ttf', 16,
                                         screen_w, screen_h)
   check(ok, err)
   SDL_SetRenderDrawBlendMode(nene_state.renderer, SDL_BLENDMODE_BLEND)
@@ -192,9 +192,9 @@ function State:init()
 
     -- audio
     do
-      self.resources.audio.music = load_music(self, 'resources/audio/the_great_grog.mp3')
+      self.resources.audio.music = load_music(self, 'resources/audio/the_great_grog.ogg')
       ## for i, field in ipairs(SfxEmitter.value.fields) do
-        self.resources.audio.#|field.name|# = load_sound(self, #['resources/audio/'.. field.name ..'.wav']#)
+        self.resources.audio.#|field.name|# = load_sound(self, #['resources/audio/'.. field.name ..'.ogg']#)
       ## end
       self.resources.audio.initialized = true
     end

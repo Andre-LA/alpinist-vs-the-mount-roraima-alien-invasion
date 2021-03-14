@@ -1,0 +1,31 @@
+##[=[
+local compiler = require 'nelua.ccompiler'
+if compiler.get_cc_info().is_emscripten then
+  PLATFORM_WEB = true
+
+  cflags '--preload-file resources'
+  cflags '--shell-file shell_minimal.html'
+
+  cflags '-s USE_SDL=2'
+  cflags '-s USE_SDL_TTF=2'
+  cflags '-s USE_SDL_IMAGE=2'
+  cflags [[-s SDL2_IMAGE_FORMATS='["png"]']]
+
+  cflags '-s USE_SDL_MIXER=2'
+  cflags [[-s SDL2_MIXER_FORMATS='["ogg"]']]
+
+  cflags '-s ALLOW_MEMORY_GROWTH=1'
+
+
+  primtypes.integer = primtypes.int32
+  primtypes.uinteger = primtypes.uint32
+  primtypes.number = primtypes.float32
+
+  -- resut:
+  -- emcc "nelua_cache/alpinist-vs-the-mount-roraima-alien-invasion.c" -o "nelua_cache/alpinist-vs-the-mount-roraima-alien-invasion.html" -Wall -fwrapv -g --preload-file resources -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 -s ALLOW_MEMORY_GROWTH=1 -s SDL2_IMAGE_FORMATS='["png"]' -s SDL2_MIXER_FORMATS='["ogg"]' --shell-file shell_minimal.html
+end
+]=]
+
+## if PLATFORM_WEB then
+global function emscripten_set_main_loop(func: function(), fps: cint, simulate_infinite_loop: cint) <cimport,cinclude'<emscripten.h>',nodecl> end
+## end

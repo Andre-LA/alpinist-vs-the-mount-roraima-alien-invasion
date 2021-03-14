@@ -96,7 +96,7 @@ local function run_frame()
   ## end
 end
 
-## if PLATFORM_WEB and not pragmas.nogc then
+## if PLATFORM_WEB then
   emscripten_set_main_loop(run_frame, 0, 1)
 ## else
   -- run game loop until it quits
