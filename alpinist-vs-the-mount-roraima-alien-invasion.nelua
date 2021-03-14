@@ -1,6 +1,7 @@
 require 'vector'
 require 'game_state'
 require 'level'
+require 'game_over_screen'
 
 local game = Game.State.new('Alpinist VS The Mount Roraima Alien Invasion', 800, 600)
 game:init()
@@ -8,9 +9,13 @@ game:init()
 local level = Game.Level.new(game)
 level:init(game)
 
+local game_over_screen = Game.GameOverScreen.new(game)
+
 -- run game loop until it quits
 while not game.nene_state.quit do
   level:update(game)
+
+  local alpinist_life = level.alpinist:get_life()
 
   -- update nene's internal state
   game.nene_state:pool_events()
@@ -20,35 +25,37 @@ while not game.nene_state.quit do
   local mstate = SDL_GetMouseState(&mx, &my)
 
   do -- processing systems
-    game.systems.map_controller:run(game.nene_state.deltatime, level.map_height)
+    if alpinist_life.points > 0 then
+      game.systems.map_controller:run(game.nene_state.deltatime, level.map_height)
 
-    game.systems.alpinist_controller:run(game.nene_state,
-                                         {mx * level.win_screen_ratio.x, my * level.win_screen_ratio.y},
-                                         mstate ~= 0,
-                                         function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                           level:alpinist_shoot(pos, dir)
-                                         end)
+      game.systems.alpinist_controller:run(game.nene_state,
+                                           {mx * level.win_screen_ratio.x, my * level.win_screen_ratio.y},
+                                           mstate ~= 0,
+                                           function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+                                             level:alpinist_shoot(pos, dir)
+                                           end)
 
-    game.systems.flying_disc_controller:run(game.nene_state,
-                                            level.alpinist.position_id,
-                                            level.map_pos_x,
-                                            function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                              level:flying_disc_shoot(pos, dir)
-                                            end)
+      game.systems.flying_disc_controller:run(game.nene_state,
+                                              level.alpinist.position_id,
+                                              level.map_pos_x,
+                                              function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+                                                level:flying_disc_shoot(pos, dir)
+                                              end)
 
-    game.systems.gravity_applier:run(game.nene_state.deltatime)
+      game.systems.gravity_applier:run(game.nene_state.deltatime)
 
-    game.systems.intersectable_update:run()
-    game.systems.intersections_detector:run()
-    game.systems.collisions:run()
+      game.systems.intersectable_update:run()
+      game.systems.intersections_detector:run()
+      game.systems.collisions:run()
 
-    game.systems.velocity_applier:run()
+      game.systems.velocity_applier:run()
 
-    game.systems.position_hierarchy:run()
-    game.systems.follower_system:run()
-    game.systems.camera_holder_system:run()
+      game.systems.position_hierarchy:run()
+      game.systems.follower_system:run()
+      game.systems.camera_holder_system:run()
 
-    game.systems.sprite_animation:run(game.nene_state:get_ms_time())
+      game.systems.sprite_animation:run(game.nene_state:get_ms_time())
+    end
   end
 
   do -- rendering systems
@@ -62,6 +69,12 @@ while not game.nene_state.quit do
         game.systems.intersectable_painter:run(game.nene_state)
         game.systems.intersections_painter:run(game.nene_state)
       ## end
+    end
+
+    do -- in-game GUI rendering
+      if alpinist_life.points <= 0 then
+        game_over_screen:draw(game)
+      end
     end
 
     -- finalize in-game rendering
