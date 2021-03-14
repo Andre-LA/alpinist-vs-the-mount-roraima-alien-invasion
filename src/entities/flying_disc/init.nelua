@@ -26,6 +26,44 @@ global Game.Entities.FlyingDisc = @MakeEntity('flying_disc',
 )
 local FlyingDisc = Game.Entities.FlyingDisc
 
+local function decrease_life_points(entity_id: GenerationalIndex): *GM_Comps.Life
+  local life_opt = GM_Comps.Life.get_entry_from_entity_id(entity_id)
+  if life_opt.filled then
+    local life = life_opt:get()
+    life.points = life.points - 1
+
+    if life.points == 0 then
+      Game.sfx_emitter.enemy_explosion = true
+    else
+      Game.sfx_emitter.enemy_hit = true
+    end
+
+    return life
+  else
+    return nilptr
+  end
+end
+
+local function destroy_flying_disc(controllable: *GM_Comps.FlyingDiscControllable, entity_id: GenerationalIndex)
+  local controllable_opt = GM_Comps.FlyingDiscControllable.get_entry_from_entity_id(entity_id)
+  local entity_opt = RotorQuick.storages.entity:get_entry(entity_id)
+
+  if entity_opt.filled then
+    entity_opt:get():clear()
+    RotorQuick.storages.entity:remove_entry(entity_id)
+  end
+
+  ## for i, field in ipairs(FlyingDisc.value.fields) do
+    ## if field.name ~= 'entity_id' and field.name ~= 'flying_disc_controllable_id' then
+      ## local actual_fname = field.name:sub(1, -4)
+      local id = controllable.ids.#|actual_fname|#
+      RotorQuick.storages.#|actual_fname|#:remove_entry(controllable.ids.#|actual_fname|#)
+    ## end
+  ## end
+
+  RotorQuick.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
+end
+
 function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (FlyingDisc, *Entity)
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
@@ -63,35 +101,16 @@ function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet):
           other_intersectable: *RQ_Comps.Intersectable
         )
           if other_intersectable.mask == Game.IntersectableMasks.ProjAlpinist then
-            local life_opt = GM_Comps.Life.get_entry_from_entity_id(self_intersectable.entity_id)
-            if life_opt.filled then
-              local life = life_opt:get()
-              life.points = life.points - 1
+            Game.Entities.Projectile.destroy_projectile(other_intersectable.entity_id)
 
-              if life.points == 0 then
-                local controllable_opt = GM_Comps.FlyingDiscControllable.get_entry_from_entity_id(self_intersectable.entity_id)
-                if controllable_opt.filled then
-                  local controllable = controllable_opt:get()
+            local life = decrease_life_points(self_intersectable.entity_id)
 
-                  local entity_opt = RotorQuick.storages.entity:get_entry(self_intersectable.entity_id)
-                  if entity_opt.filled then
-                    do
-                      entity_opt:get():clear()
-                    end
-                    RotorQuick.storages.entity:remove_entry(self_intersectable.entity_id)
+            local controllable_opt = GM_Comps.FlyingDiscControllable.get_entry_from_entity_id(self_intersectable.entity_id)
+            if controllable_opt.filled then
+              local controllable = controllable_opt:get()
 
-                    local FlyingDisc = Game.Entities.FlyingDisc
-                    ## for i, field in ipairs(FlyingDisc.value.fields) do
-                      ## if field.name ~= 'entity_id' and field.name ~= 'flying_disc_controllable_id' then
-                        ## local actual_fname = field.name:sub(1, -4)
-                        local id = controllable.ids.#|actual_fname|#
-                        RotorQuick.storages.#|actual_fname|#:remove_entry(controllable.ids.#|actual_fname|#)
-                      ## end
-                    ## end
-
-                    RotorQuick.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
-                  end
-                end
+              if life and life.points == 0 then
+                destroy_flying_disc(controllable, self_intersectable.entity_id)
               end
             end
           end

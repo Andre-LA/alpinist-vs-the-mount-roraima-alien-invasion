@@ -28,6 +28,24 @@ global Game.Entities.Alpinist = @MakeEntity('alpinist',
 )
 local Alpinist = Game.Entities.Alpinist
 
+local function decrease_life_points(entity_id: GenerationalIndex): *GM_Comps.Life
+  local life_opt = GM_Comps.Life.get_entry_from_entity_id(entity_id)
+  if life_opt.filled then
+    local life = life_opt:get()
+    life.points = life.points - 1
+
+    if life.points > 0 then
+      Game.sfx_emitter.alpinist_hit = true
+    else
+      Game.sfx_emitter.alpinist_final_hit = true
+    end
+
+    return life
+  else
+    return nilptr
+  end
+end
+
 function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (Alpinist, *Entity)
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
@@ -69,11 +87,7 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
           other_intersectable: *RQ_Comps.Intersectable
         )
           if other_intersectable.mask == Game.IntersectableMasks.ProjEnemy then
-            local life_opt = GM_Comps.Life.get_entry_from_entity_id(self_intersectable.entity_id)
-            if life_opt.filled then
-              local life = life_opt:get()
-              life.points = life.points - 1
-            end
+            decrease_life_points(self_intersectable.entity_id)
           end
         end
     },
