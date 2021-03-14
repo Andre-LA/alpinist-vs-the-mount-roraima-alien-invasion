@@ -24,7 +24,7 @@ global Projectile.Speed = @enum{
 function Projectile.create(
   pos: Nene.Math.Vec2,
   direction: Nene.Math.Vec2,
-  --[[spritesheet: Nene.SpriteSheet, ]]
+  --[[spritesheet: Nene.SpriteSheet,]]
   speed: number,
   mask: Game.IntersectableMasks
 ): (Projectile, *Entity)

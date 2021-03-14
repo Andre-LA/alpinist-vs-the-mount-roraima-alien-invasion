@@ -181,7 +181,7 @@ function State:init()
     --self.resources.projectile.texture_atlas.unit_height = 25
 
     -- dev help: check for non-initialized resources
-    ## for i, field in pairs(State.value.fields.resources.type.fields) do
+    ## for i, field in ipairs(State.value.fields.resources.type.fields) do
       check(self.resources.#|field.name|#.initialized, #['the "'..field.name..'" is not initialized']#)
     ## end
   end

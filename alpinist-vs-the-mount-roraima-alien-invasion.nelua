@@ -1,6 +1,6 @@
 require 'vector'
-require 'src.game_state'
-require 'src.level'
+require 'game_state'
+require 'level'
 
 local game = Game.State.new('Alpinist VS The Mount Roraima Alien Invasion', 800, 600)
 game:init()
@@ -66,10 +66,6 @@ while not game.nene_state.quit do
 
     -- finalize in-game rendering
     game.nene_state:render_screen()
-    --game.nene_state.camera = {}
-
-    do -- GUI rendering
-    end
 
     -- present
     game.nene_state:render_present()

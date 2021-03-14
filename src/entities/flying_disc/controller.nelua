@@ -18,7 +18,7 @@ function FlyingDiscController:run(
   nene_state: *Nene.CoreState,
   alpinist_pos_id: GenerationalIndex,
   wall_pos_x: number,
-  proj_instantiator: function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+  proj_instantiator_callback: function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
 )
   local alpinist_pos_opt = RQ_Comps.Position.get_entry_from_id(alpinist_pos_id)
 
@@ -72,7 +72,7 @@ function FlyingDiscController:run(
           target.last_shoot = current_time
 
           local proj_pos = position:get_global_position() --+ (@Nene.Math.Vec2){4, 0}
-          proj_instantiator(proj_pos, dir_to_alpinist)
+          proj_instantiator_callback(proj_pos, dir_to_alpinist)
         end
     end
   end
