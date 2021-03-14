@@ -169,6 +169,7 @@ function State.new(title: string, win_width: integer, win_height: integer)
                                         'nene/resources/monogram_extended.ttf', 16,
                                         screen_w, screen_h)
   check(ok, err)
+  SDL_SetRenderDrawBlendMode(nene_state.renderer, SDL_BLENDMODE_BLEND)
 
   local result: State = {
     window_size = {win_width, win_height},
