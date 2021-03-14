@@ -4,9 +4,21 @@ require 'rotor-quick.makers'
 
 local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
 
-global Game.Entities.Projectile = @MakeEntity('projectile',
-  RQ_Comps.Position,
+global GM_Comps.ProjectileIds = @record{
+  projectile_ids: GenerationalIndex,
+  position: GenerationalIndex,
+  velocity: GenerationalIndex,
+  intersectable: GenerationalIndex,
+  --sprite: GenerationalIndex,
+  --painter: GenerationalIndex,
+}
+local ProjectileIds = GM_Comps.ProjectileIds
+## impl_is_component(ProjectileIds)
 
+global Game.Entities.Projectile = @MakeEntity('projectile',
+  ProjectileIds,
+
+  RQ_Comps.Position,
   RQ_Comps.Velocity,
 
   RQ_Comps.Intersectable
@@ -59,5 +71,37 @@ function Projectile.create(
   local intersectable = proj:get_intersectable()
   intersectable:init(pos, &intersectable_vertices)
 
+  local proj_ids = proj:get_projectile_ids()
+
+  ## for i, field in ipairs(Projectile.value.fields) do
+    ## if field.name ~= 'entity_id' then
+      proj_ids.#|field.name:sub(1, -4)|# = proj.#|field.name|#
+    ## end
+  ## end
+
   return proj, proj_ent
+end
+
+function Projectile.destroy_projectile(entity_id: GenerationalIndex)
+  local proj_ids_opt = GM_Comps.ProjectileIds.get_entry_from_entity_id(entity_id)
+  local entity_opt = RotorQuick.storages.entity:get_entry(entity_id)
+
+  if entity_opt.filled then
+    entity_opt:get():clear()
+    RotorQuick.storages.entity:remove_entry(entity_id)
+  end
+
+  if proj_ids_opt.filled then
+    local proj_ids = proj_ids_opt:get()
+
+    ## for i, field in ipairs(Projectile.value.fields) do
+      ## if field.name ~= 'entity_id' and field.name ~= 'projectile_ids_id' then
+        ## local actual_fname = field.name:sub(1, -4)
+        local id = proj_ids.#|actual_fname|#
+        RotorQuick.storages.#|actual_fname|#:remove_entry(proj_ids.#|actual_fname|#)
+      ## end
+    ## end
+
+    RotorQuick.storages.projectile_ids:remove_entry(proj_ids.projectile_ids)
+  end
 end
