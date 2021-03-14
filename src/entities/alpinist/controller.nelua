@@ -75,6 +75,7 @@ function AlpinistController:run(
           local alpinist_gl_pos = position:get_global_position()
           local proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - alpinist_gl_pos)
           proj_instantiator(alpinist_gl_pos, proj_dir)
+          Game.sfx_emitter.alpinist_laser_shoot = true
         end
     end
 

@@ -58,6 +58,8 @@ while not game.nene_state.quit do
     end
   end
 
+  Game.sfx_emitter:play_sounds(game)
+
   do -- rendering systems
     game.nene_state:render_clear(Nene.Palette.bg)
 

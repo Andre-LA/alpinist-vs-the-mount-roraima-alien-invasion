@@ -28,6 +28,17 @@ global Game.SpriteLayer = @enum{
   Tile,
 }
 
+local SfxEmitter = @record{
+  enemy_hit: boolean,
+  enemy_laser_shoot: boolean,
+  enemy_explosion: boolean,
+  alpinist_laser_shoot: boolean,
+  alpinist_hit: boolean,
+  alpinist_final_hit: boolean,
+}
+
+global Game.sfx_emitter: SfxEmitter = {}
+
 global Game.static_settings: record{
   tile_size: integer,
   gravity_acceleration: number,
@@ -115,9 +126,41 @@ global Game.State = @record{
     flying_disc: SpriteResouces,
     --projectile: SpriteResouces,
     map: MapResouces,
+    audio: record{
+      music: Nene.Music,
+      enemy_hit: Nene.Sound,
+      enemy_laser_shoot: Nene.Sound,
+      enemy_explosion: Nene.Sound,
+      alpinist_laser_shoot: Nene.Sound,
+      alpinist_hit: Nene.Sound,
+      alpinist_final_hit: Nene.Sound,
+      initialized: boolean
+    }
   },
 }
 local State = Game.State
+
+function SfxEmitter:play_sounds(game: *Game.State)
+  ## for i, field in ipairs(SfxEmitter.value.fields) do
+    if self.#|field.name|# then
+      game.resources.audio.#|field.name|#:play()
+    end
+  ## end
+
+  $self = {}
+end
+
+local function load_sound(state: *State, path: string): Nene.Sound
+  local ok, err, sound = state.nene_state:load_sound(path)
+  check(ok, err)
+  return sound
+end
+
+local function load_music(state: *State, path: string): Nene.Music
+  local ok, err, sound = state.nene_state:load_music(path)
+  check(ok, err)
+  return sound
+end
 
 function State.new(title: string, win_width: integer, win_height: integer)
   local screen_w: integer, screen_h: integer = win_width // 2, win_height // 2
@@ -139,6 +182,15 @@ end
 function State:init()
   -- load resources
   do
+    -- audio
+    do
+      self.resources.audio.music = load_music(self, 'resources/audio/the_great_grog.mp3')
+      ## for i, field in ipairs(SfxEmitter.value.fields) do
+        self.resources.audio.#|field.name|# = load_sound(self, #['resources/audio/'.. field.name ..'.wav']#)
+      ## end
+      self.resources.audio.initialized = true
+    end
+
     -- alpinist
     self.resources.alpinist:load('resources/arts/characters/Personagem.png', self.nene_state)
     self.resources.alpinist.texture_atlas.unit_width = 31
@@ -190,6 +242,9 @@ function State:init()
   ## for i, field in ipairs(State.value.fields.systems.type.fields) do
     self.systems.#|field.name|# = (@#[field.type]#).new()
   ## end
+
+  -- init music
+  self.nene_state:play_music(self.resources.audio.music, true)
 end
 
 function State:systems_update(ent: *Entity)
