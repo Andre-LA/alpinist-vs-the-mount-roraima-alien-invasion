@@ -9,8 +9,9 @@ global GM_Comps.ProjectileIds = @record{
   position: GenerationalIndex,
   velocity: GenerationalIndex,
   intersectable: GenerationalIndex,
-  --sprite: GenerationalIndex,
-  --painter: GenerationalIndex,
+  sprite: GenerationalIndex,
+  animation_player: GenerationalIndex,
+  painter: GenerationalIndex,
 }
 local ProjectileIds = GM_Comps.ProjectileIds
 ## impl_is_component(ProjectileIds)
@@ -21,10 +22,11 @@ global Game.Entities.Projectile = @MakeEntity('projectile',
   RQ_Comps.Position,
   RQ_Comps.Velocity,
 
-  RQ_Comps.Intersectable
+  RQ_Comps.Intersectable,
 
-  --RQ_Comps.Sprite,
-  --RQ_Comps.Painter
+  RQ_Comps.Sprite,
+  RQ_Comps.AnimationPlayer,
+  RQ_Comps.Painter
 )
 local Projectile = Game.Entities.Projectile
 
@@ -36,11 +38,14 @@ global Projectile.Speed = @enum{
 function Projectile.create(
   pos: Nene.Math.Vec2,
   direction: Nene.Math.Vec2,
-  --[[spritesheet: Nene.SpriteSheet,]]
+  spritesheet: *Nene.SpriteSheet,
   speed: number,
   mask: Game.IntersectableMasks
 ): (Projectile, *Entity)
   local tile_size <const> = Game.static_settings.tile_size
+
+  local ok, start_anim = spritesheet:get_named_animation_range(mask == Game.IntersectableMasks.ProjAlpinist and 'proj_alpinist' or 'proj_enemy')
+  check(ok)
 
   local proj, proj_ent = Projectile.new{
     position = {
@@ -56,14 +61,22 @@ function Projectile.create(
       =mask,
     },
 
-    --sprite = {
-    --  =spritesheet,
-    --  layer = Game.SpriteLayer.Projectile,
-    --},
---
---    painter = {
---      active = true,
---    },
+    sprite = {
+      =spritesheet,
+      layer = Game.SpriteLayer.Projectile,
+      current_frame = start_anim.from,
+    },
+
+    animation_player = {
+      current_animation = start_anim,
+      speed = 1,
+      looping = true,
+    },
+
+    painter = {
+      active = true,
+      color = Nene.Palette.white,
+    },
   }
 
   local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, {8, 8} }

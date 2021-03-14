@@ -21,9 +21,9 @@ global Game.Entities.Alpinist = @MakeEntity('alpinist',
 
   RQ_Comps.Intersectable,
   RQ_Comps.Intersections,
-  RQ_Comps.Collider,
 
   RQ_Comps.Sprite,
+  RQ_Comps.AnimationPlayer,
   RQ_Comps.Painter
 )
 local Alpinist = Game.Entities.Alpinist
@@ -49,6 +49,9 @@ end
 function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (Alpinist, *Entity)
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
+
+  local ok, start_anim = spritesheet:get_named_animation_range'climbing'
+  check(ok)
 
   local alpinist, alpinist_ent = Alpinist.new{
     life = {
@@ -92,14 +95,17 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
         end
     },
 
-    collider = {
-      tolerance = 2,
-      mask = Game.IntersectableMasks.SurfaceTile,
-    },
-
     sprite = {
       =spritesheet,
       layer = Game.SpriteLayer.Alpinist,
+      current_frame = start_anim.from,
+    },
+
+    animation_player = {
+      current_animation = start_anim,
+
+      speed = 1,
+      looping = true,
     },
 
     painter = {
@@ -108,9 +114,9 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
     },
   }
 
-  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, { 18, 34} }
   local intersectable = alpinist:get_intersectable()
-  intersectable:init(pos, &intersectable_vertices)
+  intersectable.local_rect = {20, 0, 16, 37}
+  intersectable:set_global_rect(pos)
 
   return alpinist, alpinist_ent
 end

@@ -1,7 +1,12 @@
+require 'config'
 require 'vector'
 require 'game_state'
 require 'level'
 require 'game_over_screen'
+
+## if PLATFORM_WEB and not pragmas.nogc then
+  gc:stop() -- conservative GCs cannot run automatically with emscripten
+## end
 
 local game = Game.State.new('Alpinist VS The Mount Roraima Alien Invasion', 800, 600)
 game:init()
@@ -11,8 +16,7 @@ level:init(game)
 
 local game_over_screen = Game.GameOverScreen.new(game)
 
--- run game loop until it quits
-while not game.nene_state.quit do
+local function run_frame()
   level:update(game)
 
   local alpinist_life = level.alpinist:get_life()
@@ -46,7 +50,6 @@ while not game.nene_state.quit do
 
       game.systems.intersectable_update:run()
       game.systems.intersections_detector:run()
-      game.systems.collisions:run()
 
       game.systems.velocity_applier:run()
 
@@ -62,6 +65,8 @@ while not game.nene_state.quit do
 
   do -- rendering systems
     game.nene_state:render_clear(Nene.Palette.bg)
+
+    game.resources.scene_background:draw(game.nene_state, Nene.Palette.white)
 
     do -- in-game rendering
       game.systems.tilemap_painter:run(game.nene_state)
@@ -85,6 +90,19 @@ while not game.nene_state.quit do
     -- present
     game.nene_state:render_present()
   end
+
+  ## if PLATFORM_WEB and not pragmas.nogc then
+    gc:collect() -- running gc here is fine
+  ## end
 end
+
+## if PLATFORM_WEB and not pragmas.nogc then
+  emscripten_set_main_loop(run_frame, 0, 1)
+## else
+  -- run game loop until it quits
+  while not game.nene_state.quit do
+    run_frame()
+  end
+## end
 
 game:terminate()

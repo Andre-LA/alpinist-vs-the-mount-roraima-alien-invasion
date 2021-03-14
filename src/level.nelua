@@ -37,7 +37,10 @@ function Level:init(game: *Game.State)
   self.map_pos_x = game.screen_size.x - tile_size * 3
   self.map_height = tile_size * game.resources.map.tilemap.height
 
-  self.alpinist = game:create_alpinist({game.screen_size.x - tile_size * 4, 32})
+  self.alpinist = game:create_alpinist({
+    game.screen_size.x - tile_size * 3 - game.resources.alpinist.texture_atlas.unit_width,
+    32
+  })
 
   game:create_map({self.map_pos_x, 0})
   game:create_map({self.map_pos_x, -self.map_height})
