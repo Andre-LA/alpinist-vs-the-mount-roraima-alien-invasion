@@ -82,6 +82,7 @@ end
 
 global Game.State = @record{
   window_size: Nene.Math.Vec2,
+  screen_size: Nene.Math.Vec2,
   nene_state: Nene.CoreState,
   systems: record{
     -- game specific processing systems
@@ -119,13 +120,16 @@ global Game.State = @record{
 local State = Game.State
 
 function State.new(title: string, win_width: integer, win_height: integer)
+  local screen_w: integer, screen_h: integer = win_width // 2, win_height // 2
+
   local ok, err, nene_state = Nene.init(title, win_width, win_height,
                                         'nene/resources/monogram_extended.ttf', 16,
-                                        win_width // 2, win_height // 2)
+                                        screen_w, screen_h)
   check(ok, err)
 
   local result: State = {
     window_size = {win_width, win_height},
+    screen_size = {screen_w, screen_h},
     =nene_state,
   }
 

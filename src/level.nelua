@@ -1,5 +1,5 @@
 require 'math'
-require 'src.game_state'
+require 'game_state'
 
 local ProjParams = @record{
   pos: Nene.Math.Vec2,
@@ -22,8 +22,8 @@ local Level = Game.Level
 function Level.new(game: *Game.State): Level
   return (@Level){
     win_screen_ratio = {
-      game.nene_state.screen_texture.width / game.window_size.x,
-      game.nene_state.screen_texture.height / game.window_size.y,
+      game.screen_size.x / game.window_size.x,
+      game.screen_size.y / game.window_size.y,
     },
     projs_flying_disc = {},
   }
@@ -33,18 +33,16 @@ function Level:init(game: *Game.State)
   check(not self.initialized, 'A initialized level should not be initialized again')
 
   local tile_size = Game.static_settings.tile_size
-  local screen_w = game.nene_state.screen_texture.width
 
-  self.map_pos_x = screen_w - tile_size * 3
+  self.map_pos_x = game.screen_size.x - tile_size * 3
   self.map_height = tile_size * game.resources.map.tilemap.height
 
-  self.alpinist = game:create_alpinist({screen_w - tile_size * 4, 32})
+  self.alpinist = game:create_alpinist({game.screen_size.x - tile_size * 4, 32})
 
   game:create_map({self.map_pos_x, 0})
   game:create_map({self.map_pos_x, -self.map_height})
 
   game:create_surf_collider({self.map_pos_x, 0}, {1, game.resources.map.tilemap.height})
-
 
   self.initialized = true
 end
@@ -70,7 +68,7 @@ function Level:update(game: *Game.State)
   if self.spawn_timer >= 1 then
     local enemy_w: number, enemy_h: number = game.resources.flying_disc.texture_atlas.unit_width,
                                              game.resources.flying_disc.texture_atlas.unit_height
-    game:create_flying_disc({-enemy_w, math.random(0, game.nene_state.screen_texture.height - enemy_h)})
+    game:create_flying_disc({-enemy_w, math.random(0, game.screen_size.y - enemy_h)})
     self.spawn_timer = 0
   end
 end
