@@ -103,4 +103,6 @@ end
   end
 ## end
 
+game_over_screen:destroy()
+level:destroy()
 game:terminate()

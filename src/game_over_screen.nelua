@@ -23,3 +23,6 @@ function GameOverScreen:draw(game: *Game.State)
   self.game_over_text:draw(game.nene_state, pos, Nene.Palette.white)
 end
 
+function GameOverScreen:destroy()
+  self.game_over_text:free()
+end

@@ -48,17 +48,14 @@ end
 
 local function destroy_flying_disc(controllable: *GM_Comps.FlyingDiscControllable, entity_id: GenerationalIndex)
   local controllable_opt = GM_Comps.FlyingDiscControllable.get_entry_from_entity_id(entity_id)
-  local entity_opt = RotorQuick.storages.entity:get_entry(entity_id)
 
-  if entity_opt.filled then
-    entity_opt:get():clear()
-    RotorQuick.storages.entity:remove_entry(entity_id)
-  end
+  RotorQuick.storages.entity:remove_entry(entity_id, Entity.destroy)
+  RotorQuick.storages.intersections:remove_entry(controllable.ids.intersections, RQ_Comps.Intersections.destroy)
 
+  ## local should_not_autoremove = { entity_id = true, flying_disc_controllable_id = true, intersections_id = true }
   ## for i, field in ipairs(FlyingDisc.value.fields) do
-    ## if field.name ~= 'entity_id' and field.name ~= 'flying_disc_controllable_id' then
+    ## if not should_not_autoremove[field.name] then
       ## local actual_fname = field.name:sub(1, -4)
-      local id = controllable.ids.#|actual_fname|#
       RotorQuick.storages.#|actual_fname|#:remove_entry(controllable.ids.#|actual_fname|#)
     ## end
   ## end

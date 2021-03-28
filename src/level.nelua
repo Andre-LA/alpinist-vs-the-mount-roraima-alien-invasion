@@ -85,3 +85,7 @@ function Level:flying_disc_shoot(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
   check(self.initialized, 'Level must be initialized before using this method')
   self.projs_flying_disc:push({=pos, =dir, true})
 end
+
+function Level:destroy()
+  self.projs_flying_disc:destroy()
+end

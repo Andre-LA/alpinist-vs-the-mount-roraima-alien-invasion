@@ -73,6 +73,11 @@ function MapResouces:load(path: stringview, nene_state: *Nene.CoreState)
   self.initialized = true
 end
 
+function MapResouces:free()
+  self.initialized = false
+  self.texture:free()
+end
+
 local SpriteResouces = @record{
   texture: Nene.Texture,
   texture_atlas: Nene.TextureAtlas,
@@ -90,6 +95,12 @@ function SpriteResouces:load(path: stringview, nene_state: *Nene.CoreState)
 
   self.initialized = true
 end
+
+function SpriteResouces:free()
+  self.initialized = false
+  self.texture:free()
+end
+
 
 global Game.State = @record{
   window_size: Nene.Math.Vec2,
@@ -309,5 +320,43 @@ function State:create_map(pos: Vec2): GM_Ents.Map
 end
 
 function State:terminate()
+  -- free systems
+  ## for i, field in ipairs(State.value.fields.systems.type.fields) do
+    self.systems.#|field.name|#:destroy()
+  ## end
+
+  -- free storages
+  ##[[ local should_not_autoremove = {
+    entity = true, shape = true, scene_graph_node = true, intersections = true
+  }]]
+  ## for i, field in ipairs(RotorQuick.value.metafields.storages.type.fields) do
+    ## if not should_not_autoremove[field.name] then
+      RotorQuick.storages.#|field.name|#:destroy()
+    ## end
+  ## end
+  RotorQuick.storages.entity:destroy(function(e: *Entity) e:destroy() end)
+  RotorQuick.storages.shape:destroy(function(s: *RQ_Comps.Shape) s:destroy() end)
+  RotorQuick.storages.scene_graph_node:destroy(function(sgn: *RQ_Comps.SceneGraphNode) sgn:destroy() end)
+  RotorQuick.storages.intersections:destroy(function(i: *RQ_Comps.Intersections) i:destroy() end)
+
+  -- free resources
+  self.resources.alpinist:free()
+  self.resources.flying_disc:free()
+  self.resources.projectile:free()
+  self.resources.map:free()
+  self.resources.scene_background:free()
+
+  self.resources.audio.initialized = false
+  self.resources.audio.enemy_hit:stop_and_free()
+  self.resources.audio.enemy_laser_shoot:stop_and_free()
+  self.resources.audio.enemy_explosion:stop_and_free()
+  self.resources.audio.alpinist_laser_shoot:stop_and_free()
+  self.resources.audio.alpinist_hit:stop_and_free()
+  self.resources.audio.alpinist_final_hit:stop_and_free()
+
+  self.nene_state:stop_music()
+  self.resources.audio.music:free()
+
+  -- free nene
   self.nene_state:terminate()
 end
