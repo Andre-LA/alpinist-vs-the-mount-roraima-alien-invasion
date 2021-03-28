@@ -1,3 +1,5 @@
+require 'math'
+
 require 'nene'
 require 'rotor'
 require 'rotor-quick.makers'
@@ -64,21 +66,25 @@ local function destroy_flying_disc(controllable: *GM_Comps.FlyingDiscControllabl
   RotorQuick.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
 end
 
-function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (FlyingDisc, *Entity)
+function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet, current_time: uinteger): (FlyingDisc, *Entity)
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
+
+  local shoot_interval <comptime> = 2500
 
   local flying_disc, flying_disc_ent = FlyingDisc.new{
     life = {
       points = 2,
     },
 
-    target = {},
+    target = {
+      last_shoot = math.max(current_time - (shoot_interval - 1000), 0),
+    },
 
     flying_disc_controllable = {
       min_distance = tile_size * 7,
       flying_speed = tile_size / 2,
-      shoot_interval = 2500,
+      =shoot_interval,
     },
 
     position = {
