@@ -24,16 +24,14 @@ local function run_frame()
   -- update nene's internal state
   game.nene_state:pool_events()
 
-  -- TODO: abstract this on nene
-  local mx: cint, my: cint;
-  local mstate = SDL_GetMouseState(&mx, &my)
+  local mouse_coords, mstate = game.nene_state:get_mouse_state()
 
   do -- processing systems
     if alpinist_life.points > 0 then
       game.systems.map_controller:run(game.nene_state.deltatime, level.map_height)
 
       game.systems.alpinist_controller:run(game.nene_state,
-                                           {mx * level.win_screen_ratio.x, my * level.win_screen_ratio.y},
+                                           {mouse_coords.x * level.win_screen_ratio.x, mouse_coords.y * level.win_screen_ratio.y},
                                            mstate ~= 0,
                                            function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
                                              level:alpinist_shoot(pos, dir)
