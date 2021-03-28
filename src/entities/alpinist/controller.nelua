@@ -115,6 +115,8 @@ function AlpinistController:run(
             proj_pos = proj_pos + (@Nene.Math.Vec2){-10, 16}
           end
 
+          proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - proj_pos)
+
           local ok, climbing_anim = sprite.spritesheet:get_named_animation_range(shooting_anim_name)
           check(ok, 'climbing animation climbing not found')
           animation_player:change_animation(sprite, climbing_anim, nene_state:get_ms_time())
