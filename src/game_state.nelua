@@ -152,13 +152,13 @@ end
 
 local function load_sound(state: *State, path: string): Nene.Sound
   local ok, err, sound = state.nene_state:load_sound(path)
-  check(ok, err)
+  assert(ok, err)
   return sound
 end
 
 local function load_music(state: *State, path: string): Nene.Music
   local ok, err, sound = state.nene_state:load_music(path)
-  check(ok, err)
+  assert(ok, err)
   return sound
 end
 
@@ -168,7 +168,7 @@ function State.new(title: string, win_width: integer, win_height: integer)
   local ok, err, nene_state = Nene.init(title, win_width, win_height,
                                         'resources/monogram_extended.ttf', 16,
                                         screen_w, screen_h)
-  check(ok, err)
+  assert(ok, err)
   SDL_SetRenderDrawBlendMode(nene_state.renderer, SDL_BLENDMODE_BLEND)
 
   local result: State = {
@@ -186,7 +186,7 @@ function State:init()
     -- scene texture
     do
       local ok, err, scene_background = self.nene_state:load_texture'resources/arts/characters/Scene.png'
-      check(ok, err)
+      assert(ok, err)
       self.resources.scene_background = scene_background
     end
 
