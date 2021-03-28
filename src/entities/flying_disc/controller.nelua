@@ -68,10 +68,11 @@ function FlyingDiscController:run(
         -- shooting
         local current_time = nene_state:get_ms_time()
         local time_diff = current_time - target.last_shoot
+
         if time_diff >= controllable.shoot_interval then
           target.last_shoot = current_time
 
-          local proj_pos = position:get_global_position() --+ (@Nene.Math.Vec2){4, 0}
+          local proj_pos = position:get_global_position() + (@Nene.Math.Vec2){24, 0}
           proj_instantiator_callback(proj_pos, dir_to_alpinist)
         end
     end
