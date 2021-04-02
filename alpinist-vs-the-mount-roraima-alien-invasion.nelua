@@ -38,7 +38,6 @@ local function run_frame()
                                            end)
 
       game.systems.flying_disc_controller:run(game.nene_state,
-                                              level.alpinist.position_id,
                                               level.map_pos_x,
                                               function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
                                                 level:flying_disc_shoot(pos, dir)
@@ -52,7 +51,7 @@ local function run_frame()
       game.systems.velocity_applier:run()
 
       game.systems.position_hierarchy:run()
-      game.systems.follower_system:run()
+      game.systems.follower_system:run(game.nene_state.deltatime)
       game.systems.camera_holder_system:run()
 
       game.systems.sprite_animation:run(game.nene_state:get_ms_time())

@@ -296,8 +296,8 @@ function State:create_surf_collider(pos: Vec2, size: Vec2): GM_Ents.SurfaceColli
   return surf_col
 end
 
-function State:create_flying_disc(pos: Vec2)
-  local fd, fd_ent = GM_Ents.FlyingDisc.create(pos, self.resources.flying_disc.spritesheet, self.nene_state:get_ms_time())
+function State:create_flying_disc(pos: Vec2, alpinist_pos_id: GenerationalIndex)
+  local fd, fd_ent = GM_Ents.FlyingDisc.create(pos, self.resources.flying_disc.spritesheet, self.nene_state:get_ms_time(), alpinist_pos_id)
   self:systems_update(fd_ent)
   return fd
 end

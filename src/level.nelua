@@ -71,7 +71,7 @@ function Level:update(game: *Game.State)
   if self.spawn_timer >= 1 then
     local enemy_w: number, enemy_h: number = game.resources.flying_disc.texture_atlas.unit_width,
                                              game.resources.flying_disc.texture_atlas.unit_height
-    game:create_flying_disc({-enemy_w, math.random(0, game.screen_size.y - enemy_h)})
+    game:create_flying_disc({-enemy_w, math.random(0, game.screen_size.y - enemy_h)}, self.alpinist.position_id)
     self.spawn_timer = 0
   end
 end

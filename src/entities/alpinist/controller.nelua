@@ -6,7 +6,7 @@ local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
 
 global Game.Systems.AlpinistController = @MakeSystem('AlpinistController', @record{
   alpinist_controllable: GM_Comps.AlpinistControllable,
-  target: GM_Comps.Target,
+  shooter: GM_Comps.Shooter,
 
   position: RQ_Comps.Position,
   velocity: RQ_Comps.Velocity,
@@ -32,7 +32,7 @@ function AlpinistController:run(
 )
   for _, components in self:iterate_components() do
     local controllable = components.alpinist_controllable
-    local target = components.target
+    local shooter = components.shooter
     local position = components.position
     local velocity = components.velocity
     local animation_player = components.animation_player
@@ -64,7 +64,7 @@ function AlpinistController:run(
           controllable.state = AlpinistState.Shooting
 
           local alpinist_gl_pos = position:get_global_position()
-          local proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - alpinist_gl_pos)
+          local proj_dir = RQ_Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
 
           local ok, shooting_anim = sprite.spritesheet:get_named_animation_range((do
             if proj_dir.y < -0.3 then
@@ -93,13 +93,13 @@ function AlpinistController:run(
         end
 
         local current_time = nene_state:get_ms_time()
-        local time_diff = current_time - target.last_shoot
+        local time_diff = current_time - shooter.last_shoot
 
         if controls.shooting and time_diff >= controllable.shoot_interval then
-          target.last_shoot = current_time
+          shooter.last_shoot = current_time
           -- shoot in the direction of the mouse cursor position relative to alpinist's position
           local alpinist_gl_pos = position:get_global_position()
-          local proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - alpinist_gl_pos)
+          local proj_dir = RQ_Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
 
           local proj_pos = alpinist_gl_pos
           local shooting_anim_name = 'shooting_left'
@@ -115,7 +115,7 @@ function AlpinistController:run(
             proj_pos = proj_pos + (@Nene.Math.Vec2){-10, 16}
           end
 
-          proj_dir = Nene.Math.Vec2.normalized(in_game_mouse_pos - proj_pos)
+          proj_dir = RQ_Comps.Target.get_direction_from_pos(proj_pos, in_game_mouse_pos)
 
           local ok, climbing_anim = sprite.spritesheet:get_named_animation_range(shooting_anim_name)
           check(ok, 'climbing animation climbing not found')

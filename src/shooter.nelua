@@ -1,0 +1,11 @@
+require 'nene'
+require 'rotor'
+require 'rotor-quick.makers'
+
+global Game.Components.Shooter = @record{
+  should_shoot: boolean,
+  last_shoot: uinteger,
+}
+
+local Shooter = Game.Components.Shooter
+## impl_is_component(Shooter)

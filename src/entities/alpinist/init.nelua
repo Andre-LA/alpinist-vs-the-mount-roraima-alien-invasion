@@ -3,7 +3,7 @@ require 'rotor'
 require 'rotor-quick.makers'
 
 require 'life'
-require 'target'
+require 'shooter'
 require 'entities.alpinist.controllable'
 require 'entities.alpinist.controller'
 
@@ -11,7 +11,7 @@ local RQ_Comps, GM_Comps, GM_Sys = RotorQuick.Components, Game.Components, Game.
 
 global Game.Entities.Alpinist = @MakeEntity('alpinist',
   GM_Comps.Life,
-  GM_Comps.Target,
+  GM_Comps.Shooter,
   GM_Comps.AlpinistControllable,
 
   RQ_Comps.Position,
@@ -58,7 +58,7 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
       points = 10,
     },
 
-    target = {},
+    shooter = {},
 
     alpinist_controllable = {
       climb_speed = tile_size * 6,

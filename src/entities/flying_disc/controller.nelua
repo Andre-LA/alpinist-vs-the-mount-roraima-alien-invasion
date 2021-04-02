@@ -1,3 +1,4 @@
+require 'math'
 require 'nene'
 require 'rotor'
 require 'rotor-quick.makers'
@@ -6,75 +7,63 @@ local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
 
 global Game.Systems.FlyingDiscController = @MakeSystem('FlyingDiscController', @record{
   flying_disc_controllable: GM_Comps.FlyingDiscControllable,
-  target: GM_Comps.Target,
+  shooter: GM_Comps.Shooter,
+  target: RQ_Comps.Target,
+  follower: RQ_Comps.Follower,
   position: RQ_Comps.Position,
   velocity: RQ_Comps.Velocity,
 })
 
 local FlyingDiscController = Game.Systems.FlyingDiscController
-local FlyingDiscState = GM_Comps.FlyingDiscControllable.FlyingDiscState
 
 function FlyingDiscController:run(
   nene_state: *Nene.CoreState,
-  alpinist_pos_id: GenerationalIndex,
   wall_pos_x: number,
   proj_instantiator_callback: function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
 )
-  local alpinist_pos_opt = RQ_Comps.Position.get_entry_from_id(alpinist_pos_id)
-
-  if not alpinist_pos_opt.filled then
-    return
-  end
-
-  local alpinist_pos = alpinist_pos_opt:get()
-
   for _, components in self:iterate_components() do
     local controllable = components.flying_disc_controllable
+    local shooter = components.shooter
     local target = components.target
+    local follower = components.follower
     local position = components.position
     local velocity = components.velocity
 
-    switch controllable.state
-      case FlyingDiscState.Flying then
-        -- flying movement
-        local fd_gl_pos = position:get_global_position()
-        local alpinist_gl_pos = alpinist_pos:get_global_position()
+    -- flying movement
+    local fd_gl_pos = position:get_global_position()
+    local wall_distance = wall_pos_x - fd_gl_pos.x
+    local alpinist_distance = target:get_distance(fd_gl_pos)
 
-        local pos_diff = alpinist_gl_pos - fd_gl_pos
+    local is_alpinist_close = alpinist_distance < controllable.min_distance
+    local is_wall_close = wall_distance < controllable.min_distance
+    local is_right_of_wall = fd_gl_pos.x > wall_pos_x
 
-        local wall_distance = wall_pos_x - fd_gl_pos.x
-        local alpinist_distance = #pos_diff
+    local dir_to_alpinist = target:get_direction(fd_gl_pos)
+    local dir: Nene.Math.Vec2 = dir_to_alpinist
 
-        local is_alpinist_close = alpinist_distance < controllable.min_distance
-        local is_wall_close = wall_distance < controllable.min_distance
+    if is_alpinist_close or is_wall_close then
+      local neg_mul = is_alpinist_close and -1.3 or -2
+      dir = { neg_mul, 0 }
+    end
 
-        local dir_to_alpinist = Nene.Math.Vec2.normalized(pos_diff)
-        local dir = dir_to_alpinist
+    local speed_abs = math.abs(follower.speed)
+    follower.speed = is_alpinist_close and -speed_abs or speed_abs
 
-        if is_alpinist_close or is_wall_close then
-          local neg_mul = is_alpinist_close and -1.3 or -1
-          dir.x = dir.x * neg_mul
-          dir.y = dir.y * 0.8
-        end
+    if is_alpinist_close or is_wall_close or is_right_of_wall then
+      velocity:add_velocity(dir * (speed_abs / 6) * nene_state.deltatime)
+    end
 
-        velocity:add_velocity(dir * controllable.flying_speed * nene_state.deltatime)
+    velocity.final_velocity = RQ_Comps.Velocity.get_limited_velocity(velocity.final_velocity, velocity.max_velocity * nene_state.deltatime)
 
-        if is_alpinist_close then
-          velocity:add_velocity((@Nene.Math.Vec2){-1, 0} * (controllable.flying_speed / 12) * nene_state.deltatime)
-        end
+    -- shooting
+    local current_time = nene_state:get_ms_time()
+    local time_diff = current_time - shooter.last_shoot
 
-        velocity.final_velocity = RQ_Comps.Velocity.get_limited_velocity(velocity.final_velocity, velocity.max_velocity * nene_state.deltatime)
+    if time_diff >= controllable.shoot_interval then
+      shooter.last_shoot = current_time
 
-        -- shooting
-        local current_time = nene_state:get_ms_time()
-        local time_diff = current_time - target.last_shoot
-
-        if time_diff >= controllable.shoot_interval then
-          target.last_shoot = current_time
-
-          local proj_pos = position:get_global_position() + (@Nene.Math.Vec2){24, 0}
-          proj_instantiator_callback(proj_pos, dir_to_alpinist)
-        end
+      local proj_pos = position:get_global_position() + (@Nene.Math.Vec2){24, 0}
+      proj_instantiator_callback(proj_pos, dir_to_alpinist)
     end
   end
 end

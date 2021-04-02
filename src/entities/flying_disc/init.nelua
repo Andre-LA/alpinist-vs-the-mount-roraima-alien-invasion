@@ -5,7 +5,7 @@ require 'rotor'
 require 'rotor-quick.makers'
 
 require 'life'
-require 'target'
+require 'shooter'
 require 'entities.flying_disc.controllable'
 require 'entities.flying_disc.controller'
 
@@ -13,8 +13,11 @@ local RQ_Comps, GM_Comps, GM_Sys = RotorQuick.Components, Game.Components, Game.
 
 global Game.Entities.FlyingDisc = @MakeEntity('flying_disc',
   GM_Comps.Life,
-  GM_Comps.Target,
+  GM_Comps.Shooter,
   GM_Comps.FlyingDiscControllable,
+
+  RQ_Comps.Target,
+  RQ_Comps.Follower,
 
   RQ_Comps.Position,
   RQ_Comps.Velocity,
@@ -63,7 +66,12 @@ local function destroy_flying_disc(controllable: *GM_Comps.FlyingDiscControllabl
   RotorQuick.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
 end
 
-function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet, current_time: uinteger): (FlyingDisc, *Entity)
+function FlyingDisc.create(pos: Nene.Math.Vec2,
+                           spritesheet: *Nene.SpriteSheet,
+                           current_time: uinteger,
+                           alpinist_pos_id: GenerationalIndex
+                           ): (FlyingDisc, *Entity)
+
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
 
@@ -74,14 +82,21 @@ function FlyingDisc.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet, 
       points = 2,
     },
 
-    target = {
+    shooter = {
       last_shoot = math.max(current_time - (shoot_interval - 1000), 0),
     },
 
     flying_disc_controllable = {
       min_distance = tile_size * 7,
-      flying_speed = tile_size / 2,
       =shoot_interval,
+    },
+
+    target = {
+      pos_target_id = alpinist_pos_id,
+    },
+
+    follower = {
+      speed = tile_size / 2,
     },
 
     position = {
