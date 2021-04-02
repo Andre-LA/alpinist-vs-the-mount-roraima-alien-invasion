@@ -19,7 +19,7 @@ local game_over_screen = Game.GameOverScreen.new(game)
 local function run_frame()
   level:update(game)
 
-  local alpinist_life = level.alpinist:get_life()
+  local alpinist_life = $level.alpinist:get_life()
 
   -- update nene's internal state
   game.nene_state:pool_events()

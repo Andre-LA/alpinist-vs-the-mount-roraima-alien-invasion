@@ -45,8 +45,6 @@ function Level:init(game: *Game.State)
   game:create_map({self.map_pos_x, 0})
   game:create_map({self.map_pos_x, -self.map_height})
 
-  game:create_surf_collider({self.map_pos_x, 0}, {1, game.resources.map.tilemap.height})
-
   self.initialized = true
 end
 
