@@ -58,7 +58,7 @@ local MapResouces = @record{
   initialized: boolean,
 }
 
-function MapResouces:load(path: stringview, nene_state: *Nene.CoreState)
+function MapResouces:load(path: string, nene_state: *Nene.CoreState)
   local ok, err, tex = nene_state:load_texture(path)
   check(ok, err)
 
@@ -85,7 +85,7 @@ local SpriteResouces = @record{
   initialized: boolean,
 }
 
-function SpriteResouces:load(path: stringview, nene_state: *Nene.CoreState)
+function SpriteResouces:load(path: string, nene_state: *Nene.CoreState)
   local ok, err, tex = nene_state:load_texture(path)
   check(ok, err)
 
@@ -180,7 +180,6 @@ function State.new(title: string, win_width: integer, win_height: integer)
                                         'resources/monogram_extended.ttf', 16,
                                         screen_w, screen_h)
   assert(ok, err)
-  SDL_SetRenderDrawBlendMode(nene_state.renderer, SDL_BLENDMODE_BLEND)
 
   local result: State = {
     window_size = {win_width, win_height},
