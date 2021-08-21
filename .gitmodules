@@ -5,3 +5,6 @@
 [submodule "rotor-nelua"]
 	path = rotor-nelua
 	url = https://gitlab.com/Andre-LA/rotor-nelua.git
+[submodule "irene"]
+	path = irene
+	url = https://github.com/Andre-LA/irene.git
