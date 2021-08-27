@@ -1,20 +1,18 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+local Vec2 = @Math.Vec2
 
-local MapControllable = @record{
-  b: byte
-}
-## impl_is_component(MapControllable)
+local MapControllable = @record{ b: byte }
+## Irene.impl_is_component(MapControllable)
 
-global Game.Systems.MapController = @MakeSystem('map_controller', @record{
+global Game.Sys.MapController = @MakeSystem('map_controller', @record{
   map_controllable: MapControllable, -- works as a tag
-  position: RQ_Comps.Position,
-  velocity: RQ_Comps.Velocity,
+  position: Irene.Comps.Position,
+  velocity: Irene.Comps.Velocity,
 })
-local MapController = Game.Systems.MapController
+local MapController = @Game.Sys.MapController
 
 function MapController:run(dt: number, map_height: number)
   local ss = Game.static_settings
@@ -37,15 +35,16 @@ end
 global Game.Entities.Map = @MakeEntity('map',
   MapControllable,
 
-  RQ_Comps.Position,
-  RQ_Comps.Velocity,
+  Irene.Comps.Position,
+  Irene.Comps.Velocity,
 
-  RQ_Comps.Tilemap,
-  RQ_Comps.Painter
+  Irene.Comps.TextureComp,
+  Irene.Comps.TilemapComp,
+  Irene.Comps.Painter
 )
 local Map = Game.Entities.Map
 
-function Map.create(pos: Nene.Math.Vec2, tilemap: *Nene.Tilemap): (Map, *Entity)
+function Map.create(pos: Vec2, map_texture: Texture, tilemap: Tilemap): (Map, *Entity)
   local map, map_ent = Map.new{
     position = {
       local_position = pos,
@@ -55,12 +54,16 @@ function Map.create(pos: Nene.Math.Vec2, tilemap: *Nene.Tilemap): (Map, *Entity)
       active = true,
     },
 
-    tilemap = {
+    texture_comp = {
+      texture = map_texture,
+    },
+
+    tilemap_comp = {
       =tilemap,
     },
 
     painter = {
-      color = Nene.Palette.white,
+      color = Color.Palette.white,
       active = true,
     },
   }

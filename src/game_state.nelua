@@ -1,15 +1,12 @@
 require 'nene'
-require 'rotor-quick'
+require 'irene'
 
-local Vec2, Rect = Nene.Math.Vec2, Nene.Math.Rect
+local Vec2, Rect, Grid = @Math.Vec2, @Math.Rect, @Math.Grid
 
 global Game = @record{}
-global Game.Systems = @record{}
-global Game.Components = @record{}
+global Game.Sys = @record{}
+global Game.Comps = @record{}
 global Game.Entities = @record{}
-
-local RQ_Comps, RQ_Sys = RotorQuick.Components, RotorQuick.Systems
-local GM_Sys, GM_Comps, GM_Ents = Game.Systems, Game.Components, Game.Entities
 
 global Game.IntersectableMasks = @enum{
   Alpinist         = 1 << 0,
@@ -52,139 +49,139 @@ global Game.static_settings: record{
 require 'entities'
 
 local MapResouces = @record{
-  texture: Nene.Texture,
-  texture_atlas: Nene.TextureAtlas,
-  tilemap: Nene.Tilemap,
+  tileset: Texture,
+  tilemap: Tilemap,
   initialized: boolean,
 }
 
-function MapResouces:load(path: string, nene_state: *Nene.CoreState)
-  local ok, err, tex = nene_state:load_texture(path)
-  check(ok, err)
+function MapResouces:init(nene: *Nene, tileset_path: string, tilemap: Tilemap)
+  local tex, ok = Texture.load(nene, tileset_path)
+  assert(ok, 'MapResouces.init: could not load the tileset texture from tilepath')
 
-  self.texture = tex
-  self.texture_atlas = {
-    texture = &self.texture,
-    unit_width  = Game.static_settings.tile_size,
-    unit_height = Game.static_settings.tile_size,
-  }
-  self.tilemap.atlas = &self.texture_atlas
+  self.tileset = tex
+  self.tilemap = tilemap
 
   self.initialized = true
 end
 
-function MapResouces:free()
+function MapResouces:destroy()
   self.initialized = false
-  self.texture:free()
+  self.tileset:destroy()
+  self.tilemap:destroy()
 end
 
 local SpriteResouces = @record{
-  texture: Nene.Texture,
-  texture_atlas: Nene.TextureAtlas,
-  spritesheet: Nene.SpriteSheet,
+  spritesheet_tex: Texture,
+  spritesheet: SpriteSheet,
+  animations: hashmap(string, AnimationRange),
   initialized: boolean,
 }
 
-function SpriteResouces:load(path: string, nene_state: *Nene.CoreState)
-  local ok, err, tex = nene_state:load_texture(path)
-  check(ok, err)
+function SpriteResouces:init(nene: *Nene, spritesheet_path: string, spritesheet: SpriteSheet, animations: hashmap(string, AnimationRange))
+  local spritesheet_tex, ok = Texture.load(nene, spritesheet_path)
+  assert(ok, 'SpriteResouces.init: could not load spritesheet texture')
 
-  self.texture = tex
-  self.texture_atlas.texture = &self.texture
-  self.spritesheet.atlas = &self.texture_atlas
+  self.spritesheet_tex = spritesheet_tex
+  self.spritesheet = spritesheet
+  self.animations = animations
 
   self.initialized = true
 end
 
-function SpriteResouces:free()
+function SpriteResouces:destroy()
+  self.spritesheet_tex:destroy()
+  self.animations:destroy()
   self.initialized = false
-  self.texture:free()
+  self.spritesheet = (@SpriteSheet)()
 end
 
-
 global Game.State = @record{
-  window_size: Nene.Math.Vec2,
-  screen_size: Nene.Math.Vec2,
-  nene_state: Nene.CoreState,
+  window_size: Vec2,
+  screen_size: Vec2,
+
+  nene: Nene,
+
   systems: record{
     -- game specific processing systems
-    alpinist_controller: GM_Sys.AlpinistController,
-    flying_disc_controller: GM_Sys.FlyingDiscController,
-    map_controller: GM_Sys.MapController,
+    alpinist_controller: Game.Sys.AlpinistController,
+    flying_disc_controller: Game.Sys.FlyingDiscController,
+    map_controller: Game.Sys.MapController,
 
     -- game general processing systems
-    gravity_applier: RQ_Sys.GravityApplier,
-    velocity_applier: RQ_Sys.VelocityApplier,
-    position_hierarchy: RQ_Sys.PositionHierarchy,
-    intersectable_update: RQ_Sys.IntersectableUpdate,
-    intersections_detector: RQ_Sys.IntersectionsDetector,
-    follower_system: RQ_Sys.FollowerSystem,
-    camera_holder_system: RQ_Sys.CameraHolderSystem,
-    sprite_animation: RQ_Sys.SpriteAnimation,
+    gravity_applier: Irene.Sys.GravityApplier,
+    velocity_applier: Irene.Sys.VelocityApplier,
+    position_hierarchy: Irene.Sys.PositionHierarchy,
+    intersectable_update: Irene.Sys.IntersectableUpdate,
+    intersections_detector: Irene.Sys.IntersectionsDetector,
+    follower_system: Irene.Sys.FollowerSystem,
+    camera_holder_system: Irene.Sys.CameraHolderSystem,
+    sprite_animation: Irene.Sys.SpriteAnimation,
 
     -- game general painting systems
-    shape_painter: RQ_Sys.ShapePainter,
-    sprite_painter: RQ_Sys.SpritePainter,
-    tilemap_painter: RQ_Sys.TilemapPainter,
+    shape_painter: Irene.Sys.ShapePainter,
+    sprite_painter: Irene.Sys.SpritePainter,
+    tilemap_painter: Irene.Sys.TilemapPainter,
 
     -- debug painting systems
-    intersectable_painter: RQ_Sys.IntersectablePainter,
-    intersections_painter: RQ_Sys.IntersectionsPainter,
+    intersectable_painter: Irene.Sys.IntersectablePainter,
+    intersections_painter: Irene.Sys.IntersectionsPainter,
   },
+
   resources: record{
     alpinist: SpriteResouces,
     flying_disc: SpriteResouces,
     projectile: SpriteResouces,
+
+    font: Font,
+
     map: MapResouces,
-    scene_background: Nene.Texture,
+    scene_background: Texture,
+
     audio: record{
-      music: Nene.Music,
-      enemy_hit: Nene.Sound,
-      enemy_laser_shoot: Nene.Sound,
-      enemy_explosion: Nene.Sound,
-      alpinist_laser_shoot: Nene.Sound,
-      alpinist_hit: Nene.Sound,
-      alpinist_final_hit: Nene.Sound,
+      music: Music,
+      sfx: record{
+        enemy_hit: Sound,
+        enemy_laser_shoot: Sound,
+        enemy_explosion: Sound,
+        alpinist_laser_shoot: Sound,
+        alpinist_hit: Sound,
+        alpinist_final_hit: Sound,
+      },
       initialized: boolean
     }
   },
+
+  screen: Texture,
 }
 local State = Game.State
 
 function SfxEmitter:play_sounds(game: *Game.State)
   ## for i, field in ipairs(SfxEmitter.value.fields) do
     if self.#|field.name|# then
-      game.resources.audio.#|field.name|#:play()
+      game.resources.audio.sfx.#|field.name|#:play()
     end
   ## end
 
   $self = {}
 end
 
-local function load_sound(state: *State, path: string): Nene.Sound
-  local ok, err, sound = state.nene_state:load_sound(path)
-  assert(ok, err)
-  return sound
-end
-
-local function load_music(state: *State, path: string): Nene.Music
-  local ok, err, sound = state.nene_state:load_music(path)
-  assert(ok, err)
+local function load_sfx(path: string): Sound
+  local sound, ok = Sound.load(path)
+  assert(ok, 'could not load sound effect')
   return sound
 end
 
 function State.new(title: string, win_width: integer, win_height: integer)
   local screen_w: integer, screen_h: integer = win_width // 2, win_height // 2
 
-  local ok, err, nene_state = Nene.init(title, win_width, win_height,
-                                        'resources/monogram_extended.ttf', 16,
-                                        screen_w, screen_h)
-  assert(ok, err)
+  local ok, nene = Nene.init(title, win_width, win_height)
+  assert(ok, 'could not initialize nene')
 
   local result: State = {
     window_size = {win_width, win_height},
     screen_size = {screen_w, screen_h},
-    =nene_state,
+    =nene,
+    screen = Texture.create_texture(nene, screen_w, screen_h, nil, SDL_TEXTUREACCESS_TARGET)
   }
 
   return result
@@ -193,127 +190,182 @@ end
 function State:init()
   -- load resources
   do
+    -- font
+    do
+      local font, ok = Font.load('resources/monogram_extended.ttf', 12)
+      assert(ok, 'could not load font')
+
+      self.resources.font = font
+    end
+
     -- scene texture
     do
-      local ok, err, scene_background = self.nene_state:load_texture'resources/arts/characters/Scene.png'
-      assert(ok, err)
-      self.resources.scene_background = scene_background
+      local tex, ok = Texture.load(self.nene, 'resources/arts/characters/Scene.png')
+      assert(ok, 'could not load the Scene.png texture')
+      self.resources.scene_background = tex
     end
 
     -- audio
     do
-      self.resources.audio.music = load_music(self, 'resources/audio/the_great_grog.ogg')
-      ## for i, field in ipairs(SfxEmitter.value.fields) do
-        self.resources.audio.#|field.name|# = load_sound(self, #['resources/audio/'.. field.name ..'.ogg']#)
-      ## end
+      -- music
+      do
+        local mus, ok = Music.load('resources/audio/the_great_grog.ogg')
+        assert(ok, 'could not load the_great_grog.ogg music')
+        self.resources.audio.music = mus
+      end
+
+      -- sound effects
+      do
+        ## for _, field in ipairs(State.value.fields.resources.type.fields.audio.type.fields.sfx.type.fields) do
+          self.resources.audio.sfx.#|field.name|# = load_sfx(#['resources/audio/'..field.name..'.ogg']#)
+        ## end
+      end
+
       self.resources.audio.initialized = true
     end
 
     -- alpinist
-    self.resources.alpinist:load('resources/arts/characters/Personagem.png', self.nene_state)
-    self.resources.alpinist.texture_atlas.unit_width = 38
-    self.resources.alpinist.texture_atlas.unit_height = 37
+    do
+      local animations: hashmap(string, AnimationRange);
+      animations['climbing']      = {fps = 6.7, from = 4, to = 7}
+      animations['shooting_down'] = {fps = 1.0, from = 0, to = 0}
+      animations['shooting_left'] = {fps = 1.0, from = 1, to = 1}
+      animations['shooting_up']   = {fps = 1.0, from = 2, to = 2}
 
-    self.resources.alpinist.spritesheet.animations = {
-      {name = 'climbing'     , fps = 6.7, from = 4, to = 7},
-      {name = 'shooting_down', fps = 1.0, from = 0, to = 0},
-      {name = 'shooting_left', fps = 1.0, from = 1, to = 1},
-      {name = 'shooting_up'  , fps = 1.0, from = 2, to = 2},
-    }
+      self.resources.alpinist:init(
+        self.nene,
+        'resources/arts/characters/Personagem.png',
+        { sprites_per_line = 4, grid = {cell_size = { 38, 37 }} },
+        animations
+      )
+    end
 
-    -- map
-    self.resources.map:load('resources/arts/tileset/Tileset.png', self.nene_state)
-    self.resources.map.tilemap.width  = 3
-    self.resources.map.tilemap.height = 19
-    self.resources.map.tilemap.map = {
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-      0, 1, 1,
-    }
+    -- wall map
+    self.resources.map:init(
+      self.nene,
+      'resources/arts/tileset/Tileset.png',
+      {
+        tilemap_width = 3,
+        tileset_width = 2,
+        grid = { cell_size = {16, 16} },
+        map = {
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+        }
+      }
+    )
 
     -- flying disc
-    self.resources.flying_disc:load('resources/arts/characters/Inimigo.png', self.nene_state)
-    self.resources.flying_disc.texture_atlas.unit_width = 20
-    self.resources.flying_disc.texture_atlas.unit_height = 25
+    do
+      self.resources.flying_disc:init(
+        self.nene,
+        'resources/arts/characters/Inimigo.png',
+        { sprites_per_line = 1, grid = {cell_size = { 22, 27 }} },
+        {}
+      )
+    end
 
     -- projectile
-    self.resources.projectile:load('resources/arts/characters/Projeteis.png', self.nene_state)
-    self.resources.projectile.texture_atlas.unit_width = 10
-    self.resources.projectile.texture_atlas.unit_height = 8
+    do
+      local animations: hashmap(string, AnimationRange);
+      animations['proj_alpinist'] = { fps = 18, from = 0, to =  5 }
+      animations['proj_enemy']    = { fps = 18, from = 6, to = 11 }
 
-    self.resources.projectile.spritesheet.animations = {
-      {name = 'proj_alpinist', fps = 18, from = 0, to =  5},
-      {name = 'proj_enemy'   , fps = 18, from = 6, to = 11},
-    }
-
-    -- dev help: check for non-initialized resources
-    ## for i, field in ipairs(State.value.fields.resources.type.fields) do
-      check(self.resources.#|field.name|#.initialized, #['the "'..field.name..'" is not initialized']#)
-    ## end
+      self.resources.projectile:init(
+        self.nene,
+        'resources/arts/characters/Projeteis.png',
+        { sprites_per_line = 6, grid = { cell_size = { 10, 8 } } },
+        animations
+      )
+    end
   end
 
   -- init systems
-  ## for i, field in ipairs(State.value.fields.systems.type.fields) do
+  ## for _, field in ipairs(State.value.fields.systems.type.fields) do
     self.systems.#|field.name|# = (@#[field.type]#).new()
   ## end
 
   -- init music
-  self.nene_state:play_music(self.resources.audio.music, true)
+  self.resources.audio.music:play()
 end
 
 function State:systems_update(ent: *Entity)
-  -- update systems
+  -- update on all systems
   ## for i, field in ipairs(State.value.fields.systems.type.fields) do
     self.systems.#|field.name|#:update(ent)
   ## end
 end
 
-function State:create_alpinist(pos: Vec2): GM_Ents.Alpinist
-  local pl, pl_ent = GM_Ents.Alpinist.create(pos, self.resources.alpinist.spritesheet)
+function State:create_alpinist(pos: Vec2): Game.Entities.Alpinist
+  local pl, pl_ent = Game.Entities.Alpinist.create(
+    self.nene,
+    pos,
+    self.resources.alpinist.spritesheet_tex,
+    self.resources.alpinist.spritesheet,
+    self.resources.alpinist.animations
+  )
+
   self:systems_update(pl_ent)
   return pl
 end
 
-function State:create_surf_collider(pos: Vec2, size: Vec2): GM_Ents.SurfaceCollider
-  local surf_col, surf_col_ent = GM_Ents.SurfaceCollider.create(pos, size)
+function State:create_surf_collider(pos: Vec2, size: Vec2): Game.Entities.SurfaceCollider
+  local surf_col, surf_col_ent = Game.Entities.SurfaceCollider.create(pos, size)
   self:systems_update(surf_col_ent)
   return surf_col
 end
 
 function State:create_flying_disc(pos: Vec2, alpinist_pos_id: GenerationalIndex)
-  local fd, fd_ent = GM_Ents.FlyingDisc.create(pos, self.resources.flying_disc.spritesheet, self.nene_state:get_ms_time(), alpinist_pos_id)
+  local fd, fd_ent = Game.Entities.FlyingDisc.create(
+    self.nene,
+    pos,
+    self.resources.flying_disc.spritesheet_tex,
+    self.resources.flying_disc.spritesheet,
+    alpinist_pos_id
+  )
+
   self:systems_update(fd_ent)
   return fd
 end
 
 function State:create_projectile(pos: Vec2, dir: Vec2, speed: Game.Entities.Projectile.Speed, mask: Game.IntersectableMasks)
-  local proj, proj_ent = GM_Ents.Projectile.create(pos,
-                                                   dir,
-                                                   self.resources.projectile.spritesheet,
-                                                   speed * self.nene_state.deltatime,
-                                                   mask)
+  local proj, proj_ent = Game.Entities.Projectile.create(
+    pos,
+    dir,
+    self.resources.projectile.spritesheet_tex,
+    self.resources.projectile.spritesheet,
+    self.resources.projectile.animations,
+    speed * self.nene.delta_time,
+    mask
+  )
   self:systems_update(proj_ent)
   return proj_ent
 end
 
-function State:create_map(pos: Vec2): GM_Ents.Map
-  local map, map_ent = GM_Ents.Map.create(pos, self.resources.map.tilemap)
+function State:create_map(pos: Vec2): Game.Entities.Map
+  local map, map_ent = Game.Entities.Map.create(
+    pos,
+    self.resources.map.tileset,
+    self.resources.map.tilemap
+  )
+
   self:systems_update(map_ent)
   return map
 end
@@ -325,37 +377,38 @@ function State:terminate()
   ## end
 
   -- free storages
-  ##[[ local should_not_autoremove = {
-    entity = true, shape = true, scene_graph_node = true, intersections = true
-  }]]
-  ## for i, field in ipairs(RotorQuick.value.metafields.storages.type.fields) do
+  ## local should_not_autoremove = { entity = true, shape = true, scene_graph_node = true, intersections = true}
+
+  ## for i, field in ipairs(Irene.value.metafields.storages.type.fields) do
     ## if not should_not_autoremove[field.name] then
-      RotorQuick.storages.#|field.name|#:destroy()
+      Irene.storages.#|field.name|#:destroy()
     ## end
   ## end
-  RotorQuick.storages.entity:destroy(function(e: *Entity) e:destroy() end)
-  RotorQuick.storages.shape:destroy(function(s: *RQ_Comps.Shape) s:destroy() end)
-  RotorQuick.storages.scene_graph_node:destroy(function(sgn: *RQ_Comps.SceneGraphNode) sgn:destroy() end)
-  RotorQuick.storages.intersections:destroy(function(i: *RQ_Comps.Intersections) i:destroy() end)
+
+  Irene.storages.entity:destroy(Entity.destroy)
+  Irene.storages.shape:destroy(Irene.Comps.Shape.destroy)
+  Irene.storages.scene_graph_node:destroy(Irene.Comps.SceneGraphNode.destroy)
+  Irene.storages.intersections:destroy(Irene.Comps.Intersections.destroy)
 
   -- free resources
-  self.resources.alpinist:free()
-  self.resources.flying_disc:free()
-  self.resources.projectile:free()
-  self.resources.map:free()
-  self.resources.scene_background:free()
+  self.resources.font:destroy()
+
+  self.resources.alpinist:destroy()
+  self.resources.flying_disc:destroy()
+  self.resources.projectile:destroy()
+  self.resources.map:destroy()
+  self.resources.scene_background:destroy()
 
   self.resources.audio.initialized = false
-  self.resources.audio.enemy_hit:stop_and_free()
-  self.resources.audio.enemy_laser_shoot:stop_and_free()
-  self.resources.audio.enemy_explosion:stop_and_free()
-  self.resources.audio.alpinist_laser_shoot:stop_and_free()
-  self.resources.audio.alpinist_hit:stop_and_free()
-  self.resources.audio.alpinist_final_hit:stop_and_free()
+  self.resources.audio.sfx.enemy_hit:destroy()
+  self.resources.audio.sfx.enemy_laser_shoot:destroy()
+  self.resources.audio.sfx.enemy_explosion:destroy()
+  self.resources.audio.sfx.alpinist_laser_shoot:destroy()
+  self.resources.audio.sfx.alpinist_hit:destroy()
+  self.resources.audio.sfx.alpinist_final_hit:destroy()
 
-  self.nene_state:stop_music()
-  self.resources.audio.music:free()
+  self.resources.audio.music:destroy()
 
   -- free nene
-  self.nene_state:terminate()
+  self.nene:terminate()
 end

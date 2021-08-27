@@ -1,10 +1,10 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+local Vec2 = @Math.Vec2
 
-global GM_Comps.ProjectileIds = @record{
+global Game.Comps.ProjectileIds = @record{
   projectile_ids: GenerationalIndex,
   position: GenerationalIndex,
   velocity: GenerationalIndex,
@@ -13,22 +13,23 @@ global GM_Comps.ProjectileIds = @record{
   animation_player: GenerationalIndex,
   painter: GenerationalIndex,
 }
-local ProjectileIds = GM_Comps.ProjectileIds
-## impl_is_component(ProjectileIds)
+local ProjectileIds = @Game.Comps.ProjectileIds
+## Irene.impl_is_component(ProjectileIds)
 
 global Game.Entities.Projectile = @MakeEntity('projectile',
   ProjectileIds,
 
-  RQ_Comps.Position,
-  RQ_Comps.Velocity,
+  Irene.Comps.Position,
+  Irene.Comps.Velocity,
 
-  RQ_Comps.Intersectable,
+  Irene.Comps.Intersectable,
 
-  RQ_Comps.Sprite,
-  RQ_Comps.AnimationPlayer,
-  RQ_Comps.Painter
+  Irene.Comps.TextureComp,
+  Irene.Comps.Sprite,
+  Irene.Comps.AnimationPlayer,
+  Irene.Comps.Painter
 )
-local Projectile = Game.Entities.Projectile
+local Projectile = @Game.Entities.Projectile
 
 global Projectile.Speed = @enum{
   Alpinist = 16,
@@ -36,16 +37,17 @@ global Projectile.Speed = @enum{
 }
 
 function Projectile.create(
-  pos: Nene.Math.Vec2,
-  direction: Nene.Math.Vec2,
-  spritesheet: *Nene.SpriteSheet,
+  pos: Vec2,
+  direction: Vec2,
+  proj_texture: Texture,
+  spritesheet: SpriteSheet,
+  animations: hashmap(string, AnimationRange),
   speed: number,
   mask: Game.IntersectableMasks
 ): (Projectile, *Entity)
   local tile_size <const> = Game.static_settings.tile_size
 
-  local ok, start_anim = spritesheet:get_named_animation_range(mask == Game.IntersectableMasks.ProjAlpinist and 'proj_alpinist' or 'proj_enemy')
-  check(ok)
+  local start_anim = animations[(mask == Game.IntersectableMasks.ProjAlpinist and 'proj_alpinist' or 'proj_enemy')]
 
   local proj, proj_ent = Projectile.new{
     position = {
@@ -61,6 +63,10 @@ function Projectile.create(
       =mask,
     },
 
+    texture_comp = {
+      texture = proj_texture,
+    },
+
     sprite = {
       =spritesheet,
       layer = Game.SpriteLayer.Projectile,
@@ -69,25 +75,35 @@ function Projectile.create(
 
     animation_player = {
       current_animation = start_anim,
+      =animations,
       speed = 1,
       looping = true,
     },
 
     painter = {
       active = true,
-      color = Nene.Palette.white,
+      color = Color.Palette.white,
     },
   }
 
-  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, {8, 8} }
+  local intersectable_vertices: [2]Vec2 = { {}, {8, 8} }
 
-  local intersectable = proj:get_intersectable()
+  local intersectable = proj:get_component(@Irene.Comps.Intersectable)
   intersectable:init(pos, &intersectable_vertices)
 
-  local proj_ids = proj:get_projectile_ids()
+  local proj_ids = proj:get_component(@Game.Comps.ProjectileIds)
+
+  ##[[
+  local ignore_ids = {
+    entity_id = true,
+    self_id = true,
+    projectile_id = true,
+    texture_comp_id = true,
+  }
+  ]]
 
   ## for i, field in ipairs(Projectile.value.fields) do
-    ## if field.name ~= 'entity_id' then
+    ## if not ignore_ids[field.name] then
       proj_ids.#|field.name:sub(1, -4)|# = proj.#|field.name|#
     ## end
   ## end
@@ -96,21 +112,31 @@ function Projectile.create(
 end
 
 function Projectile.destroy_projectile(entity_id: GenerationalIndex)
-  local proj_ids_opt = GM_Comps.ProjectileIds.get_entry_from_entity_id(entity_id)
+  local proj_ids_opt = Game.Comps.ProjectileIds.get_entry_from_entity_id(entity_id)
 
-  RotorQuick.storages.entity:remove_entry(entity_id, Entity.destroy)
+  Irene.storages.entity:remove_entry(entity_id, Entity.destroy)
 
   if proj_ids_opt.filled then
     local proj_ids = proj_ids_opt:get()
 
-    ## local should_not_autoremove = { entity_id = true, projectile_ids_id = true, intersections_id = true }
+    ##[[
+    local should_not_autoremove = {
+      entity_id = true,
+      self_id = true,
+      projectile_ids_id = true,
+      intersections_id = true,
+      projectile_id = true,
+      texture_comp_id = true,
+    }
+    ]]
+
     ## for i, field in ipairs(Projectile.value.fields) do
       ## if not should_not_autoremove[field.name] then
         ## local actual_fname = field.name:sub(1, -4)
-        RotorQuick.storages.#|actual_fname|#:remove_entry(proj_ids.#|actual_fname|#)
+        Irene.storages.#|actual_fname|#:remove_entry(proj_ids.#|actual_fname|#)
       ## end
     ## end
 
-    RotorQuick.storages.projectile_ids:remove_entry(proj_ids.projectile_ids)
+    Irene.storages.projectile_ids:remove_entry(proj_ids.projectile_ids)
   end
 end

@@ -1,11 +1,11 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-global Game.Components.Shooter = @record{
+global Game.Comps.Shooter = @record{
   should_shoot: boolean,
   last_shoot: uinteger,
 }
 
-local Shooter = Game.Components.Shooter
-## impl_is_component(Shooter)
+local Shooter = Game.Comps.Shooter
+## Irene.impl_is_component(Shooter)

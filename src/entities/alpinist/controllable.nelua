@@ -1,6 +1,6 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
 local AlpinistState = @enum{
   Climbing = 0,
@@ -9,13 +9,12 @@ local AlpinistState = @enum{
   Dead,
 }
 
-global Game.Components.AlpinistControllable = @record{
+local AlpinistControllable = @record{
   climb_speed: number,
   shoot_interval: number,
   state: AlpinistState,
 }
+## Irene.impl_is_component(AlpinistControllable)
 
-local AlpinistControllable = Game.Components.AlpinistControllable
-## impl_is_component(AlpinistControllable)
-
-global Game.Components.AlpinistControllable.AlpinistState = AlpinistState
+global Game.Comps.AlpinistControllable = @AlpinistControllable
+global Game.Comps.AlpinistControllable.AlpinistState = @AlpinistState

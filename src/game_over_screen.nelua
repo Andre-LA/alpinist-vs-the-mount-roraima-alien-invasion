@@ -1,28 +1,30 @@
 require 'nene'
 require 'game_state'
 
+local Vec2 = @Math.Vec2
+
 global Game.GameOverScreen = @record{
-  game_over_text: Nene.TextTexture,
+  game_over_text: TextTexture,
 }
 local GameOverScreen = Game.GameOverScreen
 
 function GameOverScreen.new(game: *Game.State): GameOverScreen
   return (@GameOverScreen){
-    game_over_text = Nene.TextTexture.new(game.nene_state, "Game Over", Nene.Palette.white),
+    game_over_text = TextTexture.new(game.nene, "Game Over", game.resources.font),
   }
 end
 
 function GameOverScreen:draw(game: *Game.State)
-  game.nene_state:render_draw_rect({0, 0, game.screen_size.x, game.screen_size.y}, false, {0, 0, 0, 128})
+  game.nene:render_draw_rect({0, 0, game.screen_size.x, game.screen_size.y}, false, {0, 0, 0, 128})
 
-  local pos: Nene.Math.Vec2 = {
+  local pos: Vec2 = {
     game.screen_size.x / 2 - self.game_over_text.texture.width / 2,
     game.screen_size.y / 2 - self.game_over_text.texture.height / 2
   }
 
-  self.game_over_text:draw(game.nene_state, pos, Nene.Palette.white)
+  self.game_over_text:draw(game.nene, pos)
 end
 
 function GameOverScreen:destroy()
-  self.game_over_text:free()
+  self.game_over_text:destroy()
 end

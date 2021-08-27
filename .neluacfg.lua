@@ -2,7 +2,7 @@ return {
   add_path = {
     './src',
     './nene',
-    './rotor-quick',
+    './irene',
     './rotor-nelua',
   }
 }

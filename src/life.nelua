@@ -1,10 +1,10 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-global Game.Components.Life = @record{
+global Game.Comps.Life = @record{
   points: integer
 }
 
-local Life = Game.Components.Life
-## impl_is_component(Life)
+local Life = Game.Comps.Life
+## Irene.impl_is_component(Life)

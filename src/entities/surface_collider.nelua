@@ -1,16 +1,16 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+local Vec2 = @Math.Vec2
 
 global Game.Entities.SurfaceCollider = @MakeEntity('surf_col',
-  RQ_Comps.Position,
-  RQ_Comps.Intersectable
+  Irene.Comps.Position,
+  Irene.Comps.Intersectable
 )
-local SurfaceCollider = Game.Entities.SurfaceCollider
+local SurfaceCollider = @Game.Entities.SurfaceCollider
 
-function SurfaceCollider.create(pos: Nene.Math.Vec2, size: Nene.Math.Vec2): (SurfaceCollider, *Entity)
+function SurfaceCollider.create(pos: Vec2, size: Vec2): (SurfaceCollider, *Entity)
   local surf_col, surf_col_ent = SurfaceCollider.new{
     position = {
       local_position = pos,
@@ -22,9 +22,9 @@ function SurfaceCollider.create(pos: Nene.Math.Vec2, size: Nene.Math.Vec2): (Sur
   }
 
   local tile_size = Game.static_settings.tile_size
-  local intersectable_vertices: [2]Nene.Math.Vec2 = { {}, {tile_size * size.x, tile_size * size.y} }
+  local intersectable_vertices: [2]Vec2 = { {}, {tile_size * size.x, tile_size * size.y} }
 
-  local intersectable = surf_col:get_intersectable()
+  local intersectable = surf_col:get_component(@Irene.Comps.Intersectable)
   intersectable:init(pos, &intersectable_vertices)
 
   return surf_col, surf_col_ent

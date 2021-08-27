@@ -1,15 +1,17 @@
 require 'math'
 require 'game_state'
 
+local Vec2 = @Math.Vec2
+
 local ProjParams = @record{
-  pos: Nene.Math.Vec2,
-  dir: Nene.Math.Vec2,
+  pos: Vec2,
+  dir: Vec2,
   should_create: boolean
 }
 
 global Game.Level = @record{
   alpinist: Game.Entities.Alpinist,
-  win_screen_ratio: Nene.Math.Vec2,
+  win_screen_ratio: Vec2,
   initialized: boolean,
   map_pos_x: integer,
   map_height: integer,
@@ -35,10 +37,10 @@ function Level:init(game: *Game.State)
   local tile_size = Game.static_settings.tile_size
 
   self.map_pos_x = game.screen_size.x - tile_size * 3
-  self.map_height = tile_size * game.resources.map.tilemap.height
+  self.map_height = tile_size * game.resources.map.tilemap:get_height()
 
   self.alpinist = game:create_alpinist({
-    game.screen_size.x - tile_size * 3 - game.resources.alpinist.texture_atlas.unit_width,
+    game.screen_size.x - tile_size * 3 - game.resources.alpinist.spritesheet.grid.cell_size.width,
     32
   })
 
@@ -52,34 +54,39 @@ function Level:update(game: *Game.State)
   check(self.initialized, 'Level must be initialized before using this method')
 
   if self.proj_alpinist.should_create then
-    game:create_projectile(self.proj_alpinist.pos, self.proj_alpinist.dir,
-                           Game.Entities.Projectile.Speed.Alpinist, Game.IntersectableMasks.ProjAlpinist)
+    game:create_projectile(
+      self.proj_alpinist.pos, self.proj_alpinist.dir,
+      Game.Entities.Projectile.Speed.Alpinist, Game.IntersectableMasks.ProjAlpinist
+    )
   end
 
   for i = 0, < #self.projs_flying_disc do
-    game:create_projectile(self.projs_flying_disc[i].pos, self.projs_flying_disc[i].dir,
-                           Game.Entities.Projectile.Speed.Enemy, Game.IntersectableMasks.ProjEnemy)
+    game:create_projectile(
+      self.projs_flying_disc[i].pos, self.projs_flying_disc[i].dir,
+      Game.Entities.Projectile.Speed.Enemy, Game.IntersectableMasks.ProjEnemy
+    )
   end
 
   self.proj_alpinist.should_create = false
   self.projs_flying_disc:clear()
 
-  self.spawn_timer = self.spawn_timer + game.nene_state.deltatime
+  self.spawn_timer = self.spawn_timer + game.nene.delta_time
 
   if self.spawn_timer >= 1 then
-    local enemy_w: number, enemy_h: number = game.resources.flying_disc.texture_atlas.unit_width,
-                                             game.resources.flying_disc.texture_atlas.unit_height
+    local enemy_w: number, enemy_h: number = game.resources.flying_disc.spritesheet.grid.cell_size.width,
+                                             game.resources.flying_disc.spritesheet.grid.cell_size.height
+
     game:create_flying_disc({-enemy_w, math.random(0, game.screen_size.y - enemy_h)}, self.alpinist.position_id)
     self.spawn_timer = 0
   end
 end
 
-function Level:alpinist_shoot(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+function Level:alpinist_shoot(pos: Vec2, dir: Vec2)
   check(self.initialized, 'Level must be initialized before using this method')
   self.proj_alpinist = {=pos, =dir, true}
 end
 
-function Level:flying_disc_shoot(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+function Level:flying_disc_shoot(pos: Vec2, dir: Vec2)
   check(self.initialized, 'Level must be initialized before using this method')
   self.projs_flying_disc:push({=pos, =dir, true})
 end

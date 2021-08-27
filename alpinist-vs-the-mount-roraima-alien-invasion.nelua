@@ -4,46 +4,54 @@ require 'game_state'
 require 'level'
 require 'game_over_screen'
 
+local Vec2 = @Math.Vec2
+
+
+-- conservative GCs cannot run automatically with emscripten
 ## if PLATFORM_WEB and not pragmas.nogc then
-  gc:stop() -- conservative GCs cannot run automatically with emscripten
+  collectgarbage('stop')
 ## end
 
 local game = Game.State.new('Alpinist VS The Mount Roraima Alien Invasion', 800, 600)
 game:init()
+defer game:terminate() end
 
 local level = Game.Level.new(game)
 level:init(game)
+defer level:destroy() end
 
 local game_over_screen = Game.GameOverScreen.new(game)
+defer game_over_screen:destroy() end
 
 local function run_frame()
   level:update(game)
 
-  local alpinist_life = $level.alpinist:get_life()
+  local alpinist_life = $level.alpinist:get_component(@Game.Comps.Life)
 
   -- update nene's internal state
-  game.nene_state:pool_events()
-
-  local mouse_coords, mstate = game.nene_state:get_mouse_state()
+  game.nene:poll_events()
 
   do -- processing systems
     if alpinist_life.points > 0 then
-      game.systems.map_controller:run(game.nene_state.deltatime, level.map_height)
+      game.systems.map_controller:run(game.nene.delta_time, level.map_height)
 
-      game.systems.alpinist_controller:run(game.nene_state,
-                                           {mouse_coords.x * level.win_screen_ratio.x, mouse_coords.y * level.win_screen_ratio.y},
-                                           mstate ~= 0,
-                                           function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                             level:alpinist_shoot(pos, dir)
-                                           end)
+      game.systems.alpinist_controller:run(
+        game.nene,
+        {game.nene.mouse_pos.x * level.win_screen_ratio.x, game.nene.mouse_pos.y * level.win_screen_ratio.y},
+        function(pos: Vec2, dir: Vec2)
+          level:alpinist_shoot(pos, dir)
+        end
+      )
 
-      game.systems.flying_disc_controller:run(game.nene_state,
-                                              level.map_pos_x,
-                                              function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
-                                                level:flying_disc_shoot(pos, dir)
-                                              end)
+      game.systems.flying_disc_controller:run(
+        game.nene,
+        level.map_pos_x,
+        function(pos: Vec2, dir: Vec2)
+          level:flying_disc_shoot(pos, dir)
+        end
+      )
 
-      game.systems.gravity_applier:run(game.nene_state.deltatime)
+      game.systems.gravity_applier:run(game.nene.delta_time)
 
       game.systems.intersectable_update:run()
       game.systems.intersections_detector:run()
@@ -51,27 +59,29 @@ local function run_frame()
       game.systems.velocity_applier:run()
 
       game.systems.position_hierarchy:run()
-      game.systems.follower_system:run(game.nene_state.deltatime)
+      game.systems.follower_system:run(game.nene.delta_time)
       game.systems.camera_holder_system:run()
 
-      game.systems.sprite_animation:run(game.nene_state:get_ms_time())
+      game.systems.sprite_animation:run(game.nene.current_time)
     end
   end
 
   Game.sfx_emitter:play_sounds(game)
 
   do -- rendering systems
-    game.nene_state:render_clear(Nene.Palette.bg)
+    game.nene:set_render_target(game.screen:get())
 
-    game.resources.scene_background:draw(game.nene_state, Nene.Palette.white)
+    game.nene:render_clear(Color.Palette.bg)
+
+    game.resources.scene_background:draw(game.nene)
 
     do -- in-game rendering
-      game.systems.tilemap_painter:run(game.nene_state)
-      game.systems.sprite_painter:run(game.nene_state)
+      game.systems.tilemap_painter:run(game.nene)
+      game.systems.sprite_painter:run(game.nene)
 
       ## if SHOW_DEV_INFO then
-        game.systems.intersectable_painter:run(game.nene_state)
-        game.systems.intersections_painter:run(game.nene_state)
+        game.systems.intersectable_painter:run(game.nene)
+        game.systems.intersections_painter:run(game.nene)
       ## end
     end
 
@@ -81,15 +91,18 @@ local function run_frame()
       end
     end
 
-    -- finalize in-game rendering
-    game.nene_state:render_screen()
+    -- finalize screen rendering
+    game.nene:set_render_target()
+
+    -- render screen
+    game.screen:draw(game.nene)
 
     -- present
-    game.nene_state:render_present()
+    game.nene:render_present()
   end
 
   ## if PLATFORM_WEB and not pragmas.nogc then
-    gc:collect() -- running gc here is fine
+    collectgarbage() -- running gc here is fine
   ## end
 end
 
@@ -97,11 +110,8 @@ end
   emscripten_set_main_loop(run_frame, 0, 1)
 ## else
   -- run game loop until it quits
-  while not game.nene_state.quit do
+  repeat
     run_frame()
-  end
+  until game.nene.quit
 ## end
 
-game_over_screen:destroy()
-level:destroy()
-game:terminate()

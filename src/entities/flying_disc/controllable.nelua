@@ -1,8 +1,8 @@
 require 'vector'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-global Game.Components.FlyingDiscControllable = @record{
+global Game.Comps.FlyingDiscControllable = @record{
   min_distance: number,
   shoot_interval: number,
 
@@ -26,5 +26,5 @@ global Game.Components.FlyingDiscControllable = @record{
   }
 }
 
-local FlyingDiscControllable = Game.Components.FlyingDiscControllable
-## impl_is_component(FlyingDiscControllable)
+local FlyingDiscControllable = Game.Comps.FlyingDiscControllable
+## Irene.impl_is_component(FlyingDiscControllable)

@@ -1,22 +1,23 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
-local RQ_Comps, GM_Comps = RotorQuick.Components, Game.Components
+local Vec2 = @Math.Vec2
 
-global Game.Systems.AlpinistController = @MakeSystem('AlpinistController', @record{
-  alpinist_controllable: GM_Comps.AlpinistControllable,
-  shooter: GM_Comps.Shooter,
+local AlpinistState = Game.Comps.AlpinistControllable.AlpinistState
 
-  position: RQ_Comps.Position,
-  velocity: RQ_Comps.Velocity,
+local AlpinistController = @MakeSystem('AlpinistController', @record{
+  alpinist_controllable: Game.Comps.AlpinistControllable,
+  shooter: Game.Comps.Shooter,
 
-  animation_player: RQ_Comps.AnimationPlayer,
-  sprite: RQ_Comps.Sprite,
+  position: Irene.Comps.Position,
+  velocity: Irene.Comps.Velocity,
+
+  animation_player: Irene.Comps.AnimationPlayer,
+  sprite: Irene.Comps.Sprite,
 })
 
-local AlpinistController = Game.Systems.AlpinistController
-local AlpinistState = GM_Comps.AlpinistControllable.AlpinistState
+global Game.Sys.AlpinistController = @AlpinistController
 
 local Controls = @record{
   mov_up: boolean,
@@ -25,10 +26,9 @@ local Controls = @record{
 }
 
 function AlpinistController:run(
-  nene_state: *Nene.CoreState,
-  in_game_mouse_pos: Nene.Math.Vec2,
-  mouse_is_down: boolean,
-  proj_instantiator: function(pos: Nene.Math.Vec2, dir: Nene.Math.Vec2)
+  nene: *Nene,
+  in_game_mouse_pos: Vec2,
+  proj_instantiator: function(pos: Vec2, dir: Vec2)
 )
   for _, components in self:iterate_components() do
     local controllable = components.alpinist_controllable
@@ -39,9 +39,9 @@ function AlpinistController:run(
     local sprite = components.sprite
 
     local controls: Controls <const> = {
-      mov_up   = nene_state:get_scancode(SDL_SCANCODE_UP) or nene_state:get_scancode(SDL_SCANCODE_W),
-      mov_down = nene_state:get_scancode(SDL_SCANCODE_DOWN) or nene_state:get_scancode(SDL_SCANCODE_S),
-      shooting = mouse_is_down,
+      mov_up   = nene:get_scancode(SDL_SCANCODE_UP) or nene:get_scancode(SDL_SCANCODE_W),
+      mov_down = nene:get_scancode(SDL_SCANCODE_DOWN) or nene:get_scancode(SDL_SCANCODE_S),
+      shooting = nene.mouse_buttons[0],
     }
 
     velocity.final_velocity = {0, 0}
@@ -56,7 +56,7 @@ function AlpinistController:run(
           end
         end)
 
-        velocity.final_velocity.y = controllable.climb_speed * run_diretion * nene_state.deltatime
+        velocity.final_velocity.y = controllable.climb_speed * run_diretion * nene.delta_time
 
         -- if it's shooting, should stop and change state
         if controls.shooting then
@@ -64,9 +64,9 @@ function AlpinistController:run(
           controllable.state = AlpinistState.Shooting
 
           local alpinist_gl_pos = position:get_global_position()
-          local proj_dir = RQ_Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
+          local proj_dir = Irene.Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
 
-          local ok, shooting_anim = sprite.spritesheet:get_named_animation_range((do
+          local shooting_anim_name = (do
             if proj_dir.y < -0.3 then
               return 'shooting_up'
             elseif proj_dir.y > 0.3 then
@@ -74,59 +74,50 @@ function AlpinistController:run(
             else
               return 'shooting_left'
             end
-          end))
+          end)
 
-
-          check(ok, 'shooting animation shooting not found')
-          animation_player:change_animation(sprite, shooting_anim, nene_state:get_ms_time())
+          animation_player:change_animation(sprite, shooting_anim_name, nene.current_time)
         end
 
       case AlpinistState.Shooting then
         -- if it's not shooting, should stop and change state
         if not controls.shooting then
           controllable.state = AlpinistState.Climbing
-
-          local ok, climbing_anim = sprite.spritesheet:get_named_animation_range'climbing'
-          check(ok, 'climbing animation climbing not found')
-          animation_player:change_animation(sprite, climbing_anim, nene_state:get_ms_time())
+          animation_player:change_animation(sprite, 'climbing', nene.current_time)
           continue
         end
 
-        local current_time = nene_state:get_ms_time()
-        local time_diff = current_time - shooter.last_shoot
+        local time_diff = nene.current_time - shooter.last_shoot
 
         if controls.shooting and time_diff >= controllable.shoot_interval then
-          shooter.last_shoot = current_time
+          shooter.last_shoot = nene.current_time
           -- shoot in the direction of the mouse cursor position relative to alpinist's position
           local alpinist_gl_pos = position:get_global_position()
-          local proj_dir = RQ_Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
+          local proj_dir = Irene.Comps.Target.get_direction_from_pos(alpinist_gl_pos, in_game_mouse_pos)
 
           local proj_pos = alpinist_gl_pos
           local shooting_anim_name = 'shooting_left'
 
           if proj_dir.y < -0.3 then
             shooting_anim_name = 'shooting_up'
-            proj_pos = proj_pos + (@Nene.Math.Vec2){-4, -6}
+            proj_pos = proj_pos + Vec2{-4, -6}
           elseif proj_dir.y > 0.3 then
             shooting_anim_name = 'shooting_down'
-            proj_pos = proj_pos + (@Nene.Math.Vec2){-4, 36}
+            proj_pos = proj_pos + Vec2{-4, 36}
           else
             shooting_anim_name = 'shooting_left'
-            proj_pos = proj_pos + (@Nene.Math.Vec2){-10, 16}
+            proj_pos = proj_pos + Vec2{-10, 16}
           end
 
-          proj_dir = RQ_Comps.Target.get_direction_from_pos(proj_pos, in_game_mouse_pos)
-
-          local ok, climbing_anim = sprite.spritesheet:get_named_animation_range(shooting_anim_name)
-          check(ok, 'climbing animation climbing not found')
-          animation_player:change_animation(sprite, climbing_anim, nene_state:get_ms_time())
+          proj_dir = Irene.Comps.Target.get_direction_from_pos(proj_pos, in_game_mouse_pos)
+          animation_player:change_animation(sprite, shooting_anim_name, nene.current_time)
 
           proj_instantiator(proj_pos, proj_dir)
           Game.sfx_emitter.alpinist_laser_shoot = true
         end
     end
 
-    local map_movement = Game.static_settings.map_vel * Game.static_settings.tile_size * nene_state.deltatime
+    local map_movement = Game.static_settings.map_vel * Game.static_settings.tile_size * nene.delta_time
     velocity:add_velocity({0, map_movement})
   end
 end

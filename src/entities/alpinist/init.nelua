@@ -1,35 +1,37 @@
 require 'nene'
 require 'rotor'
-require 'rotor-quick.makers'
+require 'irene.makers'
 
 require 'life'
 require 'shooter'
 require 'entities.alpinist.controllable'
 require 'entities.alpinist.controller'
 
-local RQ_Comps, GM_Comps, GM_Sys = RotorQuick.Components, Game.Components, Game.Systems
+local Vec2 = @Math.Vec2
 
 global Game.Entities.Alpinist = @MakeEntity('alpinist',
-  GM_Comps.Life,
-  GM_Comps.Shooter,
-  GM_Comps.AlpinistControllable,
+  Game.Comps.Life,
+  Game.Comps.Shooter,
+  Game.Comps.AlpinistControllable,
 
-  RQ_Comps.Position,
+  Irene.Comps.Position,
 
-  RQ_Comps.Gravity,
-  RQ_Comps.Velocity,
+  Irene.Comps.Gravity,
+  Irene.Comps.Velocity,
 
-  RQ_Comps.Intersectable,
-  RQ_Comps.Intersections,
+  Irene.Comps.Intersectable,
+  Irene.Comps.Intersections,
 
-  RQ_Comps.Sprite,
-  RQ_Comps.AnimationPlayer,
-  RQ_Comps.Painter
+  Irene.Comps.TextureComp,
+  Irene.Comps.Sprite,
+  Irene.Comps.AnimationPlayer,
+  Irene.Comps.Painter
 )
-local Alpinist = Game.Entities.Alpinist
+local Alpinist = @Game.Entities.Alpinist
 
-local function decrease_life_points(entity_id: GenerationalIndex): *GM_Comps.Life
-  local life_opt = GM_Comps.Life.get_entry_from_entity_id(entity_id)
+local function decrease_life_points(entity_id: GenerationalIndex)
+  local life_opt = Game.Comps.Life.get_entry_from_entity_id(entity_id)
+
   if life_opt.filled then
     local life = life_opt:get()
     life.points = life.points - 1
@@ -39,19 +41,15 @@ local function decrease_life_points(entity_id: GenerationalIndex): *GM_Comps.Lif
     else
       Game.sfx_emitter.alpinist_final_hit = true
     end
-
-    return life
-  else
-    return nilptr
   end
 end
 
-function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (Alpinist, *Entity)
+function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spritesheet: SpriteSheet, animations: hashmap(string, AnimationRange)): (Alpinist, *Entity)
   local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
   local tile_size <const> = Game.static_settings.tile_size
 
-  local ok, start_anim = spritesheet:get_named_animation_range'climbing'
-  check(ok)
+  check(animations:peek('climbing'))
+  local start_anim = animations['climbing']
 
   local alpinist, alpinist_ent = Alpinist.new{
     life = {
@@ -85,14 +83,18 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
 
     intersections = {
       on_enter_callback = function(
-          self_intersectable: *RQ_Comps.Intersectable,
-          self_intersections: *RQ_Comps.Intersections,
-          other_intersectable: *RQ_Comps.Intersectable
+          self_intersectable: *Irene.Comps.Intersectable,
+          self_intersections: *Irene.Comps.Intersections,
+          other_intersectable: *Irene.Comps.Intersectable
         )
           if other_intersectable.mask == Game.IntersectableMasks.ProjEnemy then
             decrease_life_points(self_intersectable.entity_id)
           end
         end
+    },
+
+    texture_comp = {
+      texture = alpinist_texture,
     },
 
     sprite = {
@@ -102,19 +104,21 @@ function Alpinist.create(pos: Nene.Math.Vec2, spritesheet: *Nene.SpriteSheet): (
     },
 
     animation_player = {
-      current_animation = start_anim,
-
       speed = 1,
+      last_change_time = nene.current_time,
       looping = true,
+
+      animations = animations,
+      current_animation = animations['climbing']
     },
 
     painter = {
-      color = Nene.Palette.white,
+      color = Color.Palette.white,
       active = true,
     },
   }
 
-  local intersectable = alpinist:get_intersectable()
+  local intersectable = alpinist:get_component(@Irene.Comps.Intersectable)
   intersectable.local_rect = {20, 0, 16, 37}
   intersectable:set_global_rect(pos)
 
