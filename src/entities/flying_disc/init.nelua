@@ -11,7 +11,7 @@ require 'entities.flying_disc.controller'
 
 local Vec2 = @Math.Vec2
 
-global Game.Entities.FlyingDisc = @MakeEntity('flying_disc',
+local FlyingDisc = @MakeEntity('flying_disc',
   Game.Comps.Life,
   Game.Comps.Shooter,
   Game.Comps.FlyingDiscControllable,
@@ -30,7 +30,7 @@ global Game.Entities.FlyingDisc = @MakeEntity('flying_disc',
   Irene.Comps.Sprite,
   Irene.Comps.Painter
 )
-local FlyingDisc = Game.Entities.FlyingDisc
+global Game.Entities.FlyingDisc = @FlyingDisc
 
 local function decrease_life_points(entity_id: GenerationalIndex): *Game.Comps.Life
   local life_opt = Game.Comps.Life.get_entry_from_entity_id(entity_id)
@@ -50,31 +50,15 @@ local function decrease_life_points(entity_id: GenerationalIndex): *Game.Comps.L
   end
 end
 
-local function destroy_flying_disc(controllable: *Game.Comps.FlyingDiscControllable, entity_id: GenerationalIndex)
-  local controllable_opt = Game.Comps.FlyingDiscControllable.get_entry_from_entity_id(entity_id)
+local function destroy_flying_disc(entity_id: GenerationalIndex)
+  local flying_disc_e_opt = FlyingDisc.get_entry_from_entity_id(entity_id)
 
-  Irene.storages.entity:remove_entry(entity_id, Entity.destroy)
-  Irene.storages.intersections:remove_entry(controllable.ids.intersections, Irene.Comps.Intersections.destroy)
-
-  ##[[
-  local should_not_autoremove = {
-    entity_id = true,
-    self_id = true,
-    flying_disc_id = true,
-    flying_disc_controllable_id = true,
-    intersections_id = true,
-    texture_comp_id = true,
-  }
-  ]]
-
-  ## for i, field in ipairs(FlyingDisc.value.fields) do
-    ## if not should_not_autoremove[field.name] then
-      ## local actual_fname = field.name:sub(1, -4)
-      Irene.storages.#|actual_fname|#:remove_entry(controllable.ids.#|actual_fname|#)
-    ## end
-  ## end
-
-  Irene.storages.flying_disc_controllable:remove_entry(controllable.ids.flying_disc_controllable)
+  if flying_disc_e_opt.filled then
+    local flying_disc_e = flying_disc_e_opt:get()
+    flying_disc_e:destroy({
+      intersections = Irene.Comps.Intersections.destroy
+    })
+  end
 end
 
 function FlyingDisc.create(
@@ -136,13 +120,19 @@ function FlyingDisc.create(
 
             local life = decrease_life_points(self_intersectable.entity_id)
 
-            local controllable_opt = Game.Comps.FlyingDiscControllable.get_entry_from_entity_id(self_intersectable.entity_id)
-            if controllable_opt.filled then
-              local controllable = controllable_opt:get()
+            -- local flying_disc_e_opt = FlyingDisc.get_entry_from_entity_id(self_intersectable.entity_id)
 
-              if life and life.points == 0 then
-                destroy_flying_disc(controllable, self_intersectable.entity_id)
-              end
+            -- if flying_disc_e_opt.filled then
+            --   local flying_disc_e = flying_disc_e_opt:get()
+            --   if life and life.points == 0 then
+            --     flying_disc_e:destroy({
+            --       intersections = Irene.Comps.Intersections.destroy
+            --     })
+            --   end
+            -- end
+
+            if life and life.points == 0 then
+              destroy_flying_disc(self_intersectable.entity_id)
             end
           end
         end
@@ -171,23 +161,6 @@ function FlyingDisc.create(
   local intersectable_vertices: [2]Vec2 = { {}, { 20, 26} }
   local intersectable = flying_disc:get_component(@Irene.Comps.Intersectable)
   intersectable:init(pos, &intersectable_vertices)
-
-  local controllable = flying_disc:get_component(@Game.Comps.FlyingDiscControllable)
-
-  ##[[
-  local ignore = {
-    entity_id = true,
-    self_id = true,
-    flying_disc_id = true,
-    texture_comp_id = true,
-  }
-  ]]
-
-  ## for i, field in ipairs(FlyingDisc.value.fields) do
-    ## if not ignore[field.name] then
-      controllable.ids.#|field.name:sub(1, -4)|# = flying_disc.#|field.name|#
-    ## end
-  ## end
 
   return flying_disc, flying_disc_ent
 end

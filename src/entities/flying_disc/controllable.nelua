@@ -2,29 +2,10 @@ require 'vector'
 require 'rotor'
 require 'irene.makers'
 
-global Game.Comps.FlyingDiscControllable = @record{
+local FlyingDiscControllable = @record{
   min_distance: number,
   shoot_interval: number,
-
-  ids: record{
-    life: GenerationalIndex,
-    shooter: GenerationalIndex,
-    flying_disc_controllable: GenerationalIndex,
-
-    target: GenerationalIndex,
-    follower: GenerationalIndex,
-
-    position: GenerationalIndex,
-    velocity: GenerationalIndex,
-
-    intersectable: GenerationalIndex,
-    intersections: GenerationalIndex,
-    collider: GenerationalIndex,
-
-    sprite: GenerationalIndex,
-    painter: GenerationalIndex
-  }
 }
 
-local FlyingDiscControllable = Game.Comps.FlyingDiscControllable
+global Game.Comps.FlyingDiscControllable = @FlyingDiscControllable
 ## Irene.impl_is_component(FlyingDiscControllable)
