@@ -6,9 +6,8 @@ require 'game_over_screen'
 
 local Vec2 = @Math.Vec2
 
-
 -- conservative GCs cannot run automatically with emscripten
-## if PLATFORM_WEB and not pragmas.nogc then
+## if ccinfo.is_emscripten and not pragmas.nogc then
   collectgarbage('stop')
 ## end
 
@@ -101,12 +100,12 @@ local function run_frame()
     game.nene:render_present()
   end
 
-  ## if PLATFORM_WEB and not pragmas.nogc then
+  ## if ccinfo.is_emscripten and not pragmas.nogc then
     collectgarbage() -- running gc here is fine
   ## end
 end
 
-## if PLATFORM_WEB then
+## if ccinfo.is_emscripten then
   emscripten_set_main_loop(run_frame, 0, 1)
 ## else
   -- run game loop until it quits
