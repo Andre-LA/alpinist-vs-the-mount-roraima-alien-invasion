@@ -1,0 +1,28 @@
+global Settings = @record{
+  tile_size: integer,
+  gravity_acceleration: number,
+  map_vel: number,
+}
+
+global Settings.general: Settings <const> = {
+  tile_size = 16,
+  gravity_acceleration = 10,
+  map_vel = 1,
+}
+
+global Settings.IntersectableMasks = @enum{
+  Alpinist         = 1 << 0,
+  Enemy            = 1 << 1,
+  SurfaceTile      = 1 << 2,
+  ProjAlpinist     = 1 << 3,
+  ProjEnemy        = 1 << 4,
+  NonIntersectable = 1 << 5,
+}
+
+global Settings.SpriteLayer = @enum{
+  Background = 0,
+  Alpinist,
+  Enemy,
+  Projectile,
+  Tile,
+}

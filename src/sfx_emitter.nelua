@@ -1,0 +1,22 @@
+require 'nene.audio'
+
+global SfxEmitter = @record{
+  enemy_hit: boolean,
+  enemy_laser_shoot: boolean,
+  enemy_explosion: boolean,
+  alpinist_laser_shoot: boolean,
+  alpinist_hit: boolean,
+  alpinist_final_hit: boolean,
+}
+
+global SfxEmitter.emit: SfxEmitter = {}
+
+function SfxEmitter.play_sounds(resources: Resources)
+  ## for i, field in ipairs(SfxEmitter.value.fields) do
+    if SfxEmitter.emit.#|field.name|# then
+      resources.audio.sfx.#|field.name|#:play()
+      SfxEmitter.emit.#|field.name|# = false
+    end
+  ## end
+end
+

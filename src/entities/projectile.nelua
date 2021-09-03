@@ -1,6 +1,7 @@
 require 'nene'
 require 'rotor'
 require 'irene.makers'
+require 'settings'
 
 local Vec2 = @Math.Vec2
 
@@ -29,11 +30,12 @@ function Projectile.create(
   spritesheet: SpriteSheet,
   animations: hashmap(string, AnimationRange),
   speed: number,
-  mask: Game.IntersectableMasks
+  mask: Settings.IntersectableMasks
 ): (Projectile, *Entity)
-  local tile_size <const> = Game.static_settings.tile_size
-
-  local start_anim = animations[(mask == Game.IntersectableMasks.ProjAlpinist and 'proj_alpinist' or 'proj_enemy')]
+  local tile_size <const> = Settings.general.tile_size
+  local start_anim <const> = animations[
+    (mask == Settings.IntersectableMasks.ProjAlpinist and 'proj_alpinist' or 'proj_enemy')
+  ]
 
   local proj, proj_ent = Projectile.new{
     position = {
@@ -55,13 +57,14 @@ function Projectile.create(
 
     sprite = {
       =spritesheet,
-      layer = Game.SpriteLayer.Projectile,
+      layer = Settings.SpriteLayer.Projectile,
       current_frame = start_anim.from,
     },
 
     animation_player = {
       current_animation = start_anim,
-      =animations,
+      =animations, --[[ this copies hashmap, but it will share the reference
+                        to the allocated memory, in other words, **don't destroy it!** ]]
       speed = 1,
       looping = true,
     },

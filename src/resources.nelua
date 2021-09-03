@@ -1,0 +1,193 @@
+require 'nene.texture'
+require 'nene.tilemap'
+require 'nene.spritesheet'
+require 'nene.animation'
+
+local MapResouces = @record{
+  tileset: Texture,
+  tilemap: Tilemap,
+  initialized: boolean,
+}
+
+function MapResouces:init(nene: *Nene, tileset_path: string, tilemap: Tilemap)
+  local tex, ok = Texture.load(nene, tileset_path)
+  assert(ok, 'MapResouces.init: could not load the tileset texture from tilepath')
+
+  self.tileset = tex
+  self.tilemap = tilemap
+
+  self.initialized = true
+end
+
+function MapResouces:destroy()
+  self.initialized = false
+  self.tileset:destroy()
+  self.tilemap:destroy()
+end
+
+local SpriteResouces = @record{
+  spritesheet_tex: Texture,
+  spritesheet: SpriteSheet,
+  animations: hashmap(string, AnimationRange),
+  initialized: boolean,
+}
+
+function SpriteResouces:init(nene: *Nene, spritesheet_path: string, spritesheet: SpriteSheet, animations: hashmap(string, AnimationRange))
+  local spritesheet_tex, ok = Texture.load(nene, spritesheet_path)
+  assert(ok, 'SpriteResouces.init: could not load spritesheet texture')
+
+  self.spritesheet_tex = spritesheet_tex
+  self.spritesheet = spritesheet
+  self.animations = animations
+
+  self.initialized = true
+end
+
+function SpriteResouces:destroy()
+  self.spritesheet_tex:destroy()
+  self.animations:destroy()
+  self.initialized = false
+  self.spritesheet = (@SpriteSheet)()
+end
+
+global Resources = @record{
+  alpinist: SpriteResouces,
+  flying_disc: SpriteResouces,
+  projectile: SpriteResouces,
+
+  font: Font,
+
+  map: MapResouces,
+  scene_background: Texture,
+
+  audio: record{
+    music: Music,
+    sfx: record{
+      enemy_hit: Sound,
+      enemy_laser_shoot: Sound,
+      enemy_explosion: Sound,
+      alpinist_laser_shoot: Sound,
+      alpinist_hit: Sound,
+      alpinist_final_hit: Sound,
+    },
+    initialized: boolean
+  }
+}
+
+local function load_sfx(path: string): Sound
+  local sound, ok = Sound.load(path)
+  assert(ok, 'could not load sound effect')
+  return sound
+end
+
+-- load resources
+function Resources:load_and_init(nene: Nene)
+  do
+    -- font
+    do
+      local font, ok = Font.load('resources/monogram_extended.ttf', 12)
+      assert(ok, 'could not load font')
+
+      self.font = font
+    end
+
+    -- scene texture
+    do
+      local tex, ok = Texture.load(nene, 'resources/arts/characters/Scene.png')
+      assert(ok, 'could not load the Scene.png texture')
+      self.scene_background = tex
+    end
+
+    -- audio
+    do
+      -- music
+      do
+        local mus, ok = Music.load('resources/audio/the_great_grog.ogg')
+        assert(ok, 'could not load the_great_grog.ogg music')
+        self.audio.music = mus
+      end
+
+      -- sound effects
+      do
+        ## for _, field in ipairs(Resources.value.fields.audio.type.fields.sfx.type.fields) do
+          self.audio.sfx.#|field.name|# = load_sfx(#['resources/audio/'..field.name..'.ogg']#)
+        ## end
+      end
+
+      self.audio.initialized = true
+    end
+
+    -- alpinist
+    do
+      local animations: hashmap(string, AnimationRange);
+      animations['climbing']      = {fps = 6.7, from = 4, to = 7}
+      animations['shooting_down'] = {fps = 1.0, from = 0, to = 0}
+      animations['shooting_left'] = {fps = 1.0, from = 1, to = 1}
+      animations['shooting_up']   = {fps = 1.0, from = 2, to = 2}
+
+      self.alpinist:init(
+        nene,
+        'resources/arts/characters/Personagem.png',
+        { sprites_per_line = 4, grid = {cell_size = { 38, 37 }} },
+        animations
+      )
+    end
+
+    -- wall map
+    self.map:init(
+      nene,
+      'resources/arts/tileset/Tileset.png',
+      {
+        tilemap_width = 3,
+        tileset_width = 2,
+        grid = { cell_size = {16, 16} },
+        map = {
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+          1, 2, 2,
+        }
+      }
+    )
+
+    -- flying disc
+    do
+      self.flying_disc:init(
+        nene,
+        'resources/arts/characters/Inimigo.png',
+        { sprites_per_line = 1, grid = {cell_size = { 22, 27 }} },
+        {}
+      )
+    end
+
+    -- projectile
+    do
+      local animations: hashmap(string, AnimationRange);
+      animations['proj_alpinist'] = { fps = 18, from = 0, to =  5 }
+      animations['proj_enemy']    = { fps = 18, from = 6, to = 11 }
+
+      self.projectile:init(
+        nene,
+        'resources/arts/characters/Projeteis.png',
+        { sprites_per_line = 6, grid = { cell_size = { 10, 8 } } },
+        animations
+      )
+    end
+  end
+end
+

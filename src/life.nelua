@@ -2,9 +2,10 @@ require 'nene'
 require 'rotor'
 require 'irene.makers'
 
-global Game.Comps.Life = @record{
+local Life = @record{
   points: integer
 }
-
-local Life = Game.Comps.Life
 ## Irene.impl_is_component(Life)
+
+global Game.Comps.Life = @Life
+

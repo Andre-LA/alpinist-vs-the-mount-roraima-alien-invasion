@@ -65,7 +65,7 @@ local function run_frame()
     end
   end
 
-  Game.sfx_emitter:play_sounds(game)
+  SfxEmitter.play_sounds(game.resources)
 
   do -- rendering systems
     game.nene:set_render_target(game.screen:get())

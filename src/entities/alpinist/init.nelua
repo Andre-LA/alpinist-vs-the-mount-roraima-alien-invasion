@@ -1,6 +1,9 @@
 require 'nene'
 require 'rotor'
-require 'irene.makers'
+require 'irene'
+
+require 'settings'
+require 'sfx_emitter'
 
 require 'life'
 require 'shooter'
@@ -37,16 +40,16 @@ local function decrease_life_points(entity_id: GenerationalIndex)
     life.points = life.points - 1
 
     if life.points > 0 then
-      Game.sfx_emitter.alpinist_hit = true
+      SfxEmitter.emit.alpinist_hit = true
     else
-      Game.sfx_emitter.alpinist_final_hit = true
+      SfxEmitter.emit.alpinist_final_hit = true
     end
   end
 end
 
 function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spritesheet: SpriteSheet, animations: hashmap(string, AnimationRange)): (Alpinist, *Entity)
-  local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
-  local tile_size <const> = Game.static_settings.tile_size
+  local gravity_acceleration <const> = Settings.general.gravity_acceleration
+  local tile_size <const> = Settings.general.tile_size
 
   check(animations:peek('climbing'))
   local start_anim = animations['climbing']
@@ -78,7 +81,7 @@ function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spri
     },
 
     intersectable = {
-      mask = Game.IntersectableMasks.Alpinist,
+      mask = Settings.IntersectableMasks.Alpinist,
     },
 
     intersections = {
@@ -87,7 +90,7 @@ function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spri
           self_intersections: *Irene.Comps.Intersections,
           other_intersectable: *Irene.Comps.Intersectable
         )
-          if other_intersectable.mask == Game.IntersectableMasks.ProjEnemy then
+          if other_intersectable.mask == Settings.IntersectableMasks.ProjEnemy then
             decrease_life_points(self_intersectable.entity_id)
           end
         end
@@ -99,7 +102,7 @@ function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spri
 
     sprite = {
       =spritesheet,
-      layer = Game.SpriteLayer.Alpinist,
+      layer = Settings.SpriteLayer.Alpinist,
       current_frame = start_anim.from,
     },
 

@@ -1,6 +1,8 @@
 require 'nene'
 require 'rotor'
 require 'irene.makers'
+require 'settings'
+require 'sfx_emitter'
 
 local Vec2 = @Math.Vec2
 
@@ -113,11 +115,11 @@ function AlpinistController:run(
           animation_player:change_animation(sprite, shooting_anim_name, nene.current_time)
 
           proj_instantiator(proj_pos, proj_dir)
-          Game.sfx_emitter.alpinist_laser_shoot = true
+          SfxEmitter.emit.alpinist_laser_shoot = true
         end
     end
 
-    local map_movement = Game.static_settings.map_vel * Game.static_settings.tile_size * nene.delta_time
+    local map_movement = Settings.general.map_vel * Settings.general.tile_size * nene.delta_time
     velocity:add_velocity({0, map_movement})
   end
 end

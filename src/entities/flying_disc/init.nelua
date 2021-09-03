@@ -32,21 +32,21 @@ local FlyingDisc = @MakeEntity('flying_disc',
 )
 global Game.Entities.FlyingDisc = @FlyingDisc
 
-local function decrease_life_points(entity_id: GenerationalIndex): *Game.Comps.Life
+local function decrease_life_points(entity_id: GenerationalIndex): integer
   local life_opt = Game.Comps.Life.get_entry_from_entity_id(entity_id)
   if life_opt.filled then
     local life = life_opt:get()
     life.points = life.points - 1
 
     if life.points == 0 then
-      Game.sfx_emitter.enemy_explosion = true
+      SfxEmitter.emit.enemy_explosion = true
     else
-      Game.sfx_emitter.enemy_hit = true
+      SfxEmitter.emit.enemy_hit = true
     end
 
-    return life
+    return life.points
   else
-    return nilptr
+    return -1
   end
 end
 
@@ -69,8 +69,8 @@ function FlyingDisc.create(
   alpinist_pos_id: GenerationalIndex
 ): (FlyingDisc, *Entity)
 
-  local gravity_acceleration <const> = Game.static_settings.gravity_acceleration
-  local tile_size <const> = Game.static_settings.tile_size
+  local gravity_acceleration <const> = Settings.general.gravity_acceleration
+  local tile_size <const> = Settings.general.tile_size
 
   local shoot_interval <comptime> = 2500
 
@@ -106,7 +106,7 @@ function FlyingDisc.create(
     },
 
     intersectable = {
-      mask = Game.IntersectableMasks.Enemy,
+      mask = Settings.IntersectableMasks.Enemy,
     },
 
     intersections = {
@@ -115,32 +115,20 @@ function FlyingDisc.create(
           self_intersections: *Irene.Comps.Intersections,
           other_intersectable: *Irene.Comps.Intersectable
         )
-          if other_intersectable.mask == Game.IntersectableMasks.ProjAlpinist then
-            Game.Entities.Projectile.destroy_projectile(other_intersectable.entity_id)
+        if other_intersectable.mask == Settings.IntersectableMasks.ProjAlpinist then
+          Game.Entities.Projectile.destroy_projectile(other_intersectable.entity_id)
 
-            local life = decrease_life_points(self_intersectable.entity_id)
-
-            -- local flying_disc_e_opt = FlyingDisc.get_entry_from_entity_id(self_intersectable.entity_id)
-
-            -- if flying_disc_e_opt.filled then
-            --   local flying_disc_e = flying_disc_e_opt:get()
-            --   if life and life.points == 0 then
-            --     flying_disc_e:destroy({
-            --       intersections = Irene.Comps.Intersections.destroy
-            --     })
-            --   end
-            -- end
-
-            if life and life.points == 0 then
-              destroy_flying_disc(self_intersectable.entity_id)
-            end
+          local life = decrease_life_points(self_intersectable.entity_id)
+          if life == 0 then
+            destroy_flying_disc(self_intersectable.entity_id)
           end
         end
+      end
     },
 
     collider = {
       tolerance = 2,
-      mask = Game.IntersectableMasks.SurfaceTile,
+      mask = Settings.IntersectableMasks.SurfaceTile,
     },
 
     texture_comp = {
@@ -149,7 +137,7 @@ function FlyingDisc.create(
 
     sprite = {
       =spritesheet,
-      layer = Game.SpriteLayer.Enemy,
+      layer = Settings.SpriteLayer.Enemy,
     },
 
     painter = {

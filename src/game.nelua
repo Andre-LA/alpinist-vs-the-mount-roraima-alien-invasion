@@ -1,0 +1,4 @@
+global Game = @record{}
+global Game.Sys = @record{}
+global Game.Comps = @record{}
+global Game.Entities = @record{}
