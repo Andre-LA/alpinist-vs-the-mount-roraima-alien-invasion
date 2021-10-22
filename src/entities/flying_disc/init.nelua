@@ -9,7 +9,7 @@ require 'shooter'
 require 'entities.flying_disc.controllable'
 require 'entities.flying_disc.controller'
 
-local Vec2 = @Math.Vec2
+local Vec2, Rectf = @Math.Vec2, @Math.Rectf
 
 local FlyingDisc = @MakeEntity('flying_disc',
   Game.Comps.Life,
@@ -111,6 +111,7 @@ function FlyingDisc.create(
 
     intersections = {
       on_enter_callback = function(
+          intersection: Rectf,
           self_intersectable: *Irene.Comps.Intersectable,
           self_intersections: *Irene.Comps.Intersections,
           other_intersectable: *Irene.Comps.Intersectable

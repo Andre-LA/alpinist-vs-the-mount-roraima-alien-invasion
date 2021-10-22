@@ -52,9 +52,12 @@ function AlpinistController:run(
       case AlpinistState.Climbing then
         -- vertical movement
         local run_diretion = (do
-          if controls.mov_up then return -1
-          elseif controls.mov_down then return 1
-          else return 0
+          if controls.mov_up then
+            in -1
+          elseif controls.mov_down then
+            in 1
+          else
+            in 0
           end
         end)
 
@@ -70,11 +73,11 @@ function AlpinistController:run(
 
           local shooting_anim_name = (do
             if proj_dir.y < -0.3 then
-              return 'shooting_up'
+              in 'shooting_up'
             elseif proj_dir.y > 0.3 then
-              return 'shooting_down'
+              in 'shooting_down'
             else
-              return 'shooting_left'
+              in 'shooting_left'
             end
           end)
 

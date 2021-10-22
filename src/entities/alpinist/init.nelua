@@ -10,7 +10,7 @@ require 'shooter'
 require 'entities.alpinist.controllable'
 require 'entities.alpinist.controller'
 
-local Vec2 = @Math.Vec2
+local Vec2, Rectf = @Math.Vec2, @Math.Rectf
 
 global Game.Entities.Alpinist = @MakeEntity('alpinist',
   Game.Comps.Life,
@@ -86,6 +86,7 @@ function Alpinist.create(nene: *Nene, pos: Vec2, alpinist_texture: Texture, spri
 
     intersections = {
       on_enter_callback = function(
+          intersection: Rectf,
           self_intersectable: *Irene.Comps.Intersectable,
           self_intersections: *Irene.Comps.Intersections,
           other_intersectable: *Irene.Comps.Intersectable
